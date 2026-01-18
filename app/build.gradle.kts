@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    val kotlin_version = "" // 프로젝트에 맞는 kotlin 버전 입력
+    kotlin("plugin.serialization") version "$kotlin_version"
 }
 
 android {
@@ -45,4 +47,10 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    // 슈퍼베이스
+    val supabase_version = ""
+    val ktor_version = ""
+    implementation(platform("io.github.jan-tennert.supabase:bom:$supabase_version"))
+    implementation("io.github.jan-tennert.supabase:postgrest-kt")
+    implementation("io.ktor:ktor-client-android:$ktor_version")
 }
