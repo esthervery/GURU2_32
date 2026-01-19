@@ -2,58 +2,57 @@ package com.android.guru2
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.Toast
+import com.android.guru2.ui.auth.com.android.guru2.AuthViewModel
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+class SignUpFragment : Fragment(R.layout.fragment_sign_up) {
 
-/**
- * A simple [Fragment] subclass.
- * Use the [SignUpFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
-class SignUpFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+    // ViewModel 연결 (라이브러리 추가가 선행되어야 함)
+    private val authViewModel: AuthViewModel by viewModels()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // findViewById로 UI 요소 가져오기
+        val emailEdit = view.findViewById<EditText>(R.id.editSignupEmail)
+        val passwordEdit = view.findViewById<EditText>(R.id.editSignupPassword)
+        val signUpButton = view.findViewById<Button>(R.id.btnSignup)
+        val btnBack = view.findViewById<ImageButton>(R.id.btnBack)
+
+
+        // 뒤로 가기 버튼 로직
+        btnBack.setOnClickListener {
+            // StartActivity에서 addToBackStack을 사용했으므로 back stack을 팝(pop)
+            requireActivity().onBackPressedDispatcher.onBackPressed()
         }
-    }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_sign_up, container, false)
-    }
-
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment SignUpFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            SignUpFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+        viewLifecycleOwner.lifecycleScope.launch {
+            authViewModel.signUpSuccess.collectLatest { success ->
+                when (success) {
+                    true -> Toast.makeText(requireContext(), "인증 이메일이 발송되었습니다. 메일함을 확인해주세요.", Toast.LENGTH_LONG).show()
+                    false -> Toast.makeText(requireContext(), "회원가입에 실패했습니다. 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+                    null -> { /* 대기 상태 */ }
                 }
             }
+        }
+
+        signUpButton.setOnClickListener {
+            val email = emailEdit.text.toString()
+            val password = passwordEdit.text.toString()
+
+            if (email.isNotEmpty() && password.isNotEmpty()) {
+                authViewModel.signUp(email, password)
+            } else {
+                Toast.makeText(requireContext(), "정보를 입력해주세요.", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }

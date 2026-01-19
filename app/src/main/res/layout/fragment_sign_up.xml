@@ -5,7 +5,8 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".SignUpFragment"
-    android:backgroundTint="@color/warm">
+    android:backgroundTint="@color/warm"
+    android:background="#FFFFFF">
 
     <!-- Title -->
     <!-- Email label -->
@@ -71,7 +72,7 @@
         android:layout_marginTop="8dp">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etEmail"
+            android:id="@+id/editSignupEmail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textEmailAddress"
@@ -118,7 +119,7 @@
         android:layout_marginTop="8dp">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etPassword"
+            android:id="@+id/editSignupPassword"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textPassword"
@@ -132,7 +133,7 @@
 
     <!-- CTA Button -->
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnStart"
+        android:id="@+id/btnSignup"
         android:layout_width="0dp"
         android:layout_height="56dp"
         android:layout_marginStart="16dp"

@@ -1,5 +1,7 @@
-// 코틀린 2.0 버전 이상에서는 kotlinOptions 대신 compilerOptions DSL을 사용
-//import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+// local.properties 읽기 위함
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -10,11 +12,17 @@ plugins {
     kotlin("plugin.serialization") version "2.0.21"
 }
 
-// 슈퍼베이스 url, key => .local.properties에 추가되어있어야 함
-val supabaseUrl = providers.gradleProperty("SUPABASE_URL")
-    .orNull ?: (project.findProperty("SUPABASE_URL") as String?)
-val supabaseAnonKey = providers.gradleProperty("SUPABASE_ANON_KEY")
-    .orNull ?: (project.findProperty("SUPABASE_ANON_KEY") as String?)
+// 1. local.properties 파일을 명시적으로 불러옵니다.
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        load(FileInputStream(localPropertiesFile))
+    }
+}
+
+// 2. 파일에서 값을 추출합니다. (없을 경우 빈 문자열)
+val supabaseUrl = localProperties.getProperty("SUPABASE_URL") ?: ""
+val supabaseAnonKey = localProperties.getProperty("SUPABASE_ANON_KEY") ?: ""
 
 android {
     namespace = "com.android.guru2"
@@ -93,4 +101,8 @@ dependencies {
     // Desugaring
     // minSdk를 24로 유지할 경우 -> minSDK를 올려서 주석처리함
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+
+    // 회원가입 및 로그인 시 사용하는 viewModels()를 위해 추가
+    implementation("androidx.fragment:fragment-ktx:1.8.5")
+    implementation("androidx.activity:activity-ktx:1.9.3")
 }
