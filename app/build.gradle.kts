@@ -102,6 +102,9 @@ dependencies {
     // minSdk를 24로 유지할 경우 -> minSDK를 올려서 주석처리함
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
+    // 스토리지
+    implementation("io.github.jan-tennert.supabase:storage-kt:3.3.0")
+
     // 회원가입 및 로그인 시 사용하는 viewModels()를 위해 추가
     implementation("androidx.fragment:fragment-ktx:1.8.5")
     implementation("androidx.activity:activity-ktx:1.9.3")
