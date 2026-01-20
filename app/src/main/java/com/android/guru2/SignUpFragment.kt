@@ -27,6 +27,11 @@ class SignUpFragment : Fragment(R.layout.fragment_sign_up) {
         val emailEdit = view.findViewById<EditText>(R.id.editSignupEmail)
         val passwordEdit = view.findViewById<EditText>(R.id.editSignupPassword)
         val signUpButton = view.findViewById<Button>(R.id.btnSignup)
+        val btnBack = view.findViewById<ImageButton>(R.id.btnBack)
+
+        btnBack.setOnClickListener {
+            parentFragmentManager.popBackStack()
+        }
 
         // 1. 회원가입 요청 성공 시 안내 팝업 띄우기
         viewLifecycleOwner.lifecycleScope.launch {
@@ -39,17 +44,17 @@ class SignUpFragment : Fragment(R.layout.fragment_sign_up) {
             }
         }
 
-        // 2. 이메일 인증 완료(Authenticated) 감지 시 화면 이동
-        viewLifecycleOwner.lifecycleScope.launch {
-            authViewModel.isAuthenticated.collect { authenticated ->
-                if (authenticated) {
-                    confirmDialog?.dismiss() // 다이얼로그 닫기
-                    val intent = Intent(requireContext(), PetInfoActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    startActivity(intent)
-                }
-            }
-        }
+        // 2. 이메일 인증 완료(Authenticated) 감지 시 화면 이동 -> login 화면으로 이동하도록 수정
+//        viewLifecycleOwner.lifecycleScope.launch {
+//            authViewModel.isAuthenticated.collect { authenticated ->
+//                if (authenticated) {
+//                    confirmDialog?.dismiss() // 다이얼로그 닫기
+//                    val intent = Intent(requireContext(), PetInfoActivity::class.java)
+//                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+//                    startActivity(intent)
+//                }
+//            }
+//        }
 
         signUpButton.setOnClickListener {
             val email = emailEdit.text.toString()
@@ -73,6 +78,17 @@ class SignUpFragment : Fragment(R.layout.fragment_sign_up) {
 
         dialogView.findViewById<Button>(R.id.btn_dialog_close).setOnClickListener {
             confirmDialog?.dismiss()
+
+            // LoginFragment 생성 시 "회원가입에서 왔다" 표시
+            val loginFragment = LoginFragment().apply {
+                arguments = Bundle().apply {
+                    putBoolean("fromSignUp", true)
+                }
+            }
+
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, loginFragment)
+                .commit()
         }
 
         confirmDialog?.show()

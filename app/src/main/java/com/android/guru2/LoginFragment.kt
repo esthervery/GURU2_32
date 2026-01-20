@@ -23,9 +23,19 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         val loginButton = view.findViewById<Button>(R.id.btnLogin)
         val btnBack = view.findViewById<ImageButton>(R.id.btnBack)
 
-        // 뒤로 가기 버튼 로직
+        // 회원가입에서 왔는지 확인
+        val fromSignUp = arguments?.getBoolean("fromSignUp", false) ?: false
+
         btnBack.setOnClickListener {
-            requireActivity().onBackPressedDispatcher.onBackPressed()
+            if (fromSignUp) {
+                // 회원가입에서 온 경우: Fragment 제거
+                parentFragmentManager.beginTransaction()
+                    .remove(this)
+                    .commit()
+            } else {
+                // StartActivity에서 직접 온 경우: 백스택 pop
+                parentFragmentManager.popBackStack()
+            }
         }
 
         // 버튼 클릭 이벤트 연결
@@ -34,7 +44,6 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
             val password = passwordEdit.text.toString()
 
             if (email.isNotEmpty() && password.isNotEmpty()) {
-                // ViewModel에 로그인 처리 요청
                 authViewModel.signIn(email, password)
             }
         }
