@@ -1,20 +1,30 @@
-*.iml
-.gradle
+# --- IDE & 편집기 설정 ---
 .idea/
-.kotlin/
+*.iml
+*.ipr
+*.iws
+.vscode/
+/captures/
+.externalNativeBuild/
+.cxx/
+*.swp
+*.bak
+
+# --- 빌드 결과물 및 임시 파일 ---
 build/
 app/build/
+.gradle/
+/build
+.kotlin/
+.kotlin/errors/
+*.log
+
+# --- 보안 및 로컬 환경 설정 (공유 금지) ---
 local.properties
 gradle.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.kotlin/errors/*.log
+secrets.xml
+
+# --- OS 및 기타 시스템 파일 ---
 .DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+Thumbs.db
+desktop.ini
