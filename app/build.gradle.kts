@@ -5,12 +5,12 @@ import java.io.FileInputStream
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    // Serialization 플러그인 추가 -> // 당신의 Kotlin 버전과 일치시키기
+
     // Supabase와 같은 백엔드 서비스를 연동할 때 Serialization(직렬화) 필수
     // 객체 (Kotlin): User(name="Gemini", age=25)
     // 직렬화 (JSON): {"name":"Gemini","age":25}
     // 버전을 2.0.21에서 2.1.0으로 변경
-    kotlin("plugin.serialization") version "2.3.0"
+    kotlin("plugin.serialization") version "2.1.0"
 }
 
 // 1. local.properties 파일을 명시적으로 불러옵니다.
@@ -64,11 +64,14 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlin {
-        compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
-        }
+    kotlinOptions {
+        jvmTarget = "11"
     }
+//    kotlin {
+//        compilerOptions {
+//            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+//        }
+//    }
 }
 
 dependencies {
@@ -87,26 +90,21 @@ dependencies {
     // 3.0.0 이후: auth-kt 모듈 + Ktor 3.x
 
     // Supabase BOM (버전은 여기서 한 번만 관리)
-    implementation(platform("io.github.jan-tennert.supabase:bom:3.0.0"))
+    // implementation(platform("io.github.jan-tennert.supabase:bom:3.0.0"))
 
-    // PostgREST (DB까지 쓰면)
-    // Auth(이메일/비밀번호 로그인, 이메일 인증 등)
-    implementation("io.github.jan-tennert.supabase:postgrest-kt")
-    implementation("io.github.jan-tennert.supabase:auth-kt")
+    implementation("io.github.jan-tennert.supabase:supabase-kt:3.2.6")
+    implementation("io.github.jan-tennert.supabase:auth-kt:3.2.6")
+    implementation("io.github.jan-tennert.supabase:postgrest-kt:3.2.6")
+    implementation("io.github.jan-tennert.supabase:storage-kt:3.2.6")
 
-    // Ktor HTTP 엔진(Android)
-    // 공식 문서: implementation("io.ktor:ktor-client-[engine]:KTOR_VERSION")
-    implementation("io.ktor:ktor-client-okhttp:3.0.0")
+    // Ktor 3.3.0 (호환 가능)
+    implementation("io.ktor:ktor-client-android:3.3.0")
 
     // 실시간 -> 공식 문서 https://supabase.com/docs/reference/kotlin/neq 참고
-    implementation("io.github.jan-tennert.supabase:realtime-kt")
+    // implementation("io.github.jan-tennert.supabase:realtime-kt")
 
     // Desugaring
-    // minSdk를 24로 유지할 경우 -> minSDK를 올려서 주석처리함
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
-
-    // 스토리지
-    implementation("io.github.jan-tennert.supabase:storage-kt:3.3.0")
 
     // 회원가입 및 로그인 시 사용하는 viewModels()를 위해 추가
     implementation("androidx.fragment:fragment-ktx:1.8.5")
