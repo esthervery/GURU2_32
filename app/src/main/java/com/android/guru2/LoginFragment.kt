@@ -1,13 +1,17 @@
 package com.android.guru2
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import com.android.guru2.AuthViewModel
+import kotlinx.coroutines.launch
 
 class LoginFragment : Fragment(R.layout.fragment_login) {
 
@@ -35,6 +39,28 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
             } else {
                 // StartActivity에서 직접 온 경우: 백스택 pop
                 parentFragmentManager.popBackStack()
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            authViewModel.loginEvent.collect { event ->
+                when (event) {
+                    is LoginNavEvent.ToMain -> {
+                        // 정보가 있으면 메인으로
+                        val intent = Intent(requireContext(), MainActivity::class.java)
+                        startActivity(intent)
+                        requireActivity().finish()
+                    }
+                    is LoginNavEvent.ToPetInfo -> {
+                        // 정보가 없으면 등록 화면으로
+                        val intent = Intent(requireContext(), PetInfoActivity::class.java)
+                        startActivity(intent)
+                        requireActivity().finish()
+                    }
+                    is LoginNavEvent.Error -> {
+                        Toast.makeText(requireContext(), event.message, Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         }
 

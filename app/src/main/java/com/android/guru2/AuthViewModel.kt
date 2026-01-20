@@ -6,9 +6,18 @@ import com.android.guru2.data.SupabaseClientProvider
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus // 명시적 임포트
+import io.github.jan.supabase.postgrest.postgrest
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+
+sealed class LoginNavEvent {
+    object ToMain : LoginNavEvent()
+    object ToPetInfo : LoginNavEvent()
+    data class Error(val message: String) : LoginNavEvent()
+}
 
 class AuthViewModel : ViewModel() {
 
@@ -51,6 +60,9 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    private val _loginEvent = MutableSharedFlow<LoginNavEvent>()
+    val loginEvent = _loginEvent.asSharedFlow()
+
     // 로그인 함수
     fun signIn(emailInput: String, passwordInput: String) {
         viewModelScope.launch {
@@ -60,8 +72,28 @@ class AuthViewModel : ViewModel() {
                     password = passwordInput
                 }
                 // 성공 시 처리
+                val userId = SupabaseClientProvider.client.auth.currentUserOrNull()?.id
+                    ?: throw Exception("사용자 정보를 찾을 수 없습니다.")
+
+                // 3. petInfo 테이블에 해당 ID의 데이터가 있는지 확인
+                val hasPetInfo = SupabaseClientProvider.client.postgrest["petInfo"]
+                    .select {
+                        filter {
+                            eq("id", userId)
+                        }
+                    }.data != "[]" // 데이터가 비어있지 않으면 정보가 존재하는 것
+
+                // 4. 결과에 따라 이벤트 전송
+                if (hasPetInfo) {
+                    _loginEvent.emit(LoginNavEvent.ToMain)
+                } else {
+                    _loginEvent.emit(LoginNavEvent.ToPetInfo)
+                }
             } catch (e: Exception) {
-                // 에러 발생 시 처리
+                // 에러 발생 시 처리 로직
+                // 에러 발생 시 UI에 알림을 보낼 수 있도록 이벤트를 발생시킴
+                _loginEvent.emit(LoginNavEvent.Error(e.localizedMessage ?: "로그인에 실패했습니다."))
+                e.printStackTrace()
             }
         }
     }
