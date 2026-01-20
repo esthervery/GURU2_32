@@ -7,7 +7,7 @@ import android.widget.EditText
 import android.widget.ImageButton
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import com.android.guru2.ui.auth.com.android.guru2.AuthViewModel
+import com.android.guru2.AuthViewModel
 
 class LoginFragment : Fragment(R.layout.fragment_login) {
 

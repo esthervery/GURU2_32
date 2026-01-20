@@ -9,7 +9,8 @@ plugins {
     // Supabase와 같은 백엔드 서비스를 연동할 때 Serialization(직렬화) 필수
     // 객체 (Kotlin): User(name="Gemini", age=25)
     // 직렬화 (JSON): {"name":"Gemini","age":25}
-    kotlin("plugin.serialization") version "2.0.21"
+    // 버전을 2.0.21에서 2.1.0으로 변경
+    kotlin("plugin.serialization") version "2.3.0"
 }
 
 // 1. local.properties 파일을 명시적으로 불러옵니다.
@@ -63,8 +64,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+        }
     }
 }
 
