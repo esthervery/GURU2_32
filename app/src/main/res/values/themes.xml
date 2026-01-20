@@ -6,4 +6,9 @@
     </style>
 
     <style name="Theme.Guru2" parent="Base.Theme.Guru2" />
+
+<!--    petInfo 화면에서 이미지 원형으로 깎기-->
+    <style name="CircleImage" parent="">
+        <item name="cornerSize">50%</item>
+    </style>
 </resources>
