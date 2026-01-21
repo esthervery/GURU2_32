@@ -1,4 +1,5 @@
 package com.android.guru2
+
 import kotlinx.serialization.Serializable
 
 @Serializable

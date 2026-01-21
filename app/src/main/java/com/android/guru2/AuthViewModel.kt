@@ -76,22 +76,23 @@ class AuthViewModel : ViewModel() {
                     ?: throw Exception("사용자 정보를 찾을 수 없습니다.")
 
                 // 3. petInfo 테이블에 해당 ID의 데이터가 있는지 확인
-                val hasPetInfo = SupabaseClientProvider.client.postgrest["petInfo"]
+                val hasCharacterInfo = SupabaseClientProvider.client.postgrest["characterInfo"]
                     .select {
                         filter {
-                            eq("id", userId)
+                            eq("id", userId) // auth.users.id와 연결된 id 컬럼 검사
                         }
-                    }.data != "[]" // 데이터가 비어있지 않으면 정보가 존재하는 것
+                    }.data != "[]" // 데이터가 비어있지 않으면 캐릭터 정보가 존재하는 것
 
                 // 4. 결과에 따라 이벤트 전송
-                if (hasPetInfo) {
+                if (hasCharacterInfo) {
+                    // 캐릭터가 이미 생성되어 있다면 메인 화면으로
                     _loginEvent.emit(LoginNavEvent.ToMain)
                 } else {
+                    // 캐릭터 정보가 없다면 반려동물 정보 등록 화면으로
                     _loginEvent.emit(LoginNavEvent.ToPetInfo)
                 }
             } catch (e: Exception) {
                 // 에러 발생 시 처리 로직
-                // 에러 발생 시 UI에 알림을 보낼 수 있도록 이벤트를 발생시킴
                 _loginEvent.emit(LoginNavEvent.Error(e.localizedMessage ?: "로그인에 실패했습니다."))
                 e.printStackTrace()
             }

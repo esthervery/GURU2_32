@@ -109,4 +109,16 @@ dependencies {
     // 회원가입 및 로그인 시 사용하는 viewModels()를 위해 추가
     implementation("androidx.fragment:fragment-ktx:1.8.5")
     implementation("androidx.activity:activity-ktx:1.9.3")
+
+    // 1. Retrofit: 서버 통신을 위한 핵심 라이브러리
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+
+    // 2. Converter-Gson: 서버 응답(JSON)을 코틀린 객체로 자동 변환
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+
+    // 3. Gson: JSON 데이터 처리를 위한 라이브러리
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    // 4. OkHttp Logging Interceptor (선택): 서버와 주고받는 데이터를 로그로 확인하고 싶을 때 유용
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 }
