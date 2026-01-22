@@ -17,6 +17,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.android.guru2.data.SupabaseClientProvider
+import com.android.guru2.network.RetrofitClient
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.TextInputEditText
 import io.github.jan.supabase.auth.auth
@@ -149,7 +150,7 @@ class PetInfoActivity : AppCompatActivity() {
                 val imageUrl = uploadImageAndSaveToDB(name, age, gender)
 
                 // 2단계: 캐릭터 생성 서버 호출 -> 서버 생성 후 진행 예정
-//                requestCharacterGeneration(imageUrl)
+                requestCharacterGeneration(imageUrl)
 
             } catch (e: Exception) {
                 hideLoadingOverlay()
@@ -185,8 +186,9 @@ class PetInfoActivity : AppCompatActivity() {
             val publicUrl = bucket.publicUrl(fileName)
 
             // DB에 펫 정보 저장
+            // 수정된 부분: insert 대신 upsert를 사용
             val petData = PetInfo(userId, name, age, gender, publicUrl)
-            SupabaseClientProvider.client.postgrest["petInfo"].insert(petData)
+            SupabaseClientProvider.client.postgrest["petInfo"].upsert(petData)
 
             Toast.makeText(this, "반려동물 정보가 저장되었습니다.", Toast.LENGTH_SHORT).show()
 
@@ -207,13 +209,7 @@ class PetInfoActivity : AppCompatActivity() {
                 ?: throw Exception("로그인 정보가 없습니다.")
             val userId = currentUser.id
 
-            // Retrofit 인스턴스 생성
-            val retrofit = Retrofit.Builder()
-                .baseUrl("http://10.0.2.2:8000/")  // 에뮬레이터용 localhost
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
-
-            val service = retrofit.create(CharacterApiService::class.java)
+            val service = RetrofitClient.instance.create(CharacterApiService::class.java)
 
             // 서버 호출
             val response = service.requestCharacterGeneration(userId, imageUrl)

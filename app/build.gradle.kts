@@ -121,4 +121,11 @@ dependencies {
 
     // 4. OkHttp Logging Interceptor (선택): 서버와 주고받는 데이터를 로그로 확인하고 싶을 때 유용
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    // Glide: 서버의 캐릭터 URL을 ImageView에 그리기 위해 필수
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+
+    // 2. Kotlin Serialization JSON: @Serializable 어노테이션을 실제로 동작하게 함
+    // Supabase 3.2.6 버전과 호환되는 라이브러리입니다.
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 }
