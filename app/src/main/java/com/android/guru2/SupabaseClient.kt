@@ -11,36 +11,19 @@ import kotlinx.serialization.json.Json
 // import io.github.jan.supabase.realtime.Realtime
 
 object SupabaseClientProvider {
-    val client by lazy {
-        createSupabaseClient(
+    // lateinit을 사용하여 초기화 시점을 제어합니다.
+    lateinit var client: io.github.jan.supabase.SupabaseClient
+
+    fun init() {
+        // build.gradle.kts에서 설정한 BuildConfig 값을 사용합니다.
+        client = createSupabaseClient(
             supabaseUrl = BuildConfig.SUPABASE_URL,
             supabaseKey = BuildConfig.SUPABASE_ANON_KEY
         ) {
-            // JSON 설정: 서버의 필드가 클래스보다 많아도 에러가 나지 않게 설정
-            defaultSerializer = KotlinXSerializer(Json {
-                ignoreUnknownKeys = true
-                coerceInputValues = true
-            })
-            install(Auth) {
-                // Auth 설정 옵션 (선택사항)
-            }
-
-            // 데이터베이스 쿼리 (필터링, CRUD 등 - neq 사용 시 필수)
+            install(Auth)
             install(Postgrest)
-
-            // 실시간 데이터 변경 감지 (필요 시)
-//            install(Realtime)
-
-            // 스토리지 설치
             install(Storage)
+            // install(Realtime)
         }
     }
-
-    // 공식 문서 사용 예시
-//    val supabase = createSupabaseClient(supabaseUrl, supabaseKey) {
-//        //Already the default serializer, but you can provide a custom Json instance (optional):
-//        defaultSerializer = KotlinXSerializer(Json {
-//            //apply your custom config
-//        })
-//    }
 }

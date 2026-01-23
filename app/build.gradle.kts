@@ -88,10 +88,8 @@ dependencies {
 
     // 슈퍼베이스 implementation("그룹:이름:버전")
     // 3.0.0 이후: auth-kt 모듈 + Ktor 3.x
-
     // Supabase BOM (버전은 여기서 한 번만 관리)
     // implementation(platform("io.github.jan-tennert.supabase:bom:3.0.0"))
-
     implementation("io.github.jan-tennert.supabase:supabase-kt:3.2.6")
     implementation("io.github.jan-tennert.supabase:auth-kt:3.2.6")
     implementation("io.github.jan-tennert.supabase:postgrest-kt:3.2.6")
@@ -100,15 +98,15 @@ dependencies {
     // Ktor 3.3.0 (호환 가능)
     implementation("io.ktor:ktor-client-android:3.3.0")
 
+    // Kotlin Serialization JSON: @Serializable 어노테이션을 실제로 동작하게 함
+    // Supabase 3.2.6 버전과 호환되는 라이브러리입니다.
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+
     // 실시간 -> 공식 문서 https://supabase.com/docs/reference/kotlin/neq 참고
     // implementation("io.github.jan-tennert.supabase:realtime-kt")
 
     // Desugaring
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
-
-    // 회원가입 및 로그인 시 사용하는 viewModels()를 위해 추가
-    implementation("androidx.fragment:fragment-ktx:1.8.5")
-    implementation("androidx.activity:activity-ktx:1.9.3")
 
     // 1. Retrofit: 서버 통신을 위한 핵심 라이브러리
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
@@ -125,7 +123,10 @@ dependencies {
     // Glide: 서버의 캐릭터 URL을 ImageView에 그리기 위해 필수
     implementation("com.github.bumptech.glide:glide:4.16.0")
 
-    // 2. Kotlin Serialization JSON: @Serializable 어노테이션을 실제로 동작하게 함
-    // Supabase 3.2.6 버전과 호환되는 라이브러리입니다.
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+    // 회원가입 및 로그인 시 사용하는 viewModels()를 위해 추가
+    implementation("androidx.fragment:fragment-ktx:1.8.5")
+    implementation("androidx.activity:activity-ktx:1.9.3")
+    // 뷰 모델 라이프사이클 관리용
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.0")
 }
