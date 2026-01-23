@@ -1,14 +1,28 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.Guru2" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
-    </style>
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme -->
+    <style name="Theme.Guru2" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Primary colors (메인 오렌지) -->
+        <item name="colorPrimary">@color/main_orange</item>
+        <item name="colorPrimaryVariant">@color/orange_700</item>
+        <item name="colorOnPrimary">@color/white</item>
 
-    <style name="Theme.Guru2" parent="Base.Theme.Guru2" />
+        <!-- Secondary colors -->
+        <item name="colorSecondary">@color/sub_purple</item>
+        <item name="colorSecondaryVariant">@color/sub_pink</item>
+        <item name="colorOnSecondary">@color/black</item>
 
-<!--    petInfo 화면에서 이미지 원형으로 깎기-->
-    <style name="CircleImage" parent="">
-        <item name="cornerSize">50%</item>
+        <!-- Background colors -->
+        <item name="android:colorBackground">@color/white</item>
+        <item name="colorSurface">@color/background_light</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+
+        <!-- Status bar -->
+        <item name="android:statusBarColor">@color/white</item>
+        <item name="android:windowLightStatusBar">true</item>
+
+        <!-- Navigation bar -->
+        <item name="android:navigationBarColor">@color/white</item>
+        <item name="android:windowLightNavigationBar">true</item>
     </style>
 </resources>
