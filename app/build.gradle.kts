@@ -64,6 +64,8 @@ android {
 dependencies {
     // Core
     implementation("androidx.core:core-ktx:1.12.0")
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("androidx.compose.material:material-icons-extended:1.5.4")
 
     // Lifecycle / ViewModel (XML + Fragment용)
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
