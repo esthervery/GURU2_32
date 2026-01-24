@@ -46,7 +46,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
             authViewModel.loginEvent.collect { event ->
                 when (event) {
                     is LoginNavEvent.ToMain -> {
-                        // 정보가 있으면 메인으로
+                        // 캐릭터 정보가 있으면 메인으로
                         val intent = Intent(requireContext(), MainActivity::class.java)
                         startActivity(intent)
                         requireActivity().finish()

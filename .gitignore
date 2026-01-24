@@ -21,7 +21,6 @@ app/build/
 
 # --- 보안 및 로컬 환경 설정 (공유 금지) ---
 local.properties
-gradle.properties
 secrets.xml
 
 # --- OS 및 기타 시스템 파일 ---
