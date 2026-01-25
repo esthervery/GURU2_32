@@ -1,24 +1,26 @@
 package com.android.guru2.ui.community
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,35 +29,49 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.android.guru2.R
+import com.android.guru2.data.SupabaseClientProvider
+import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.Columns
+import kotlinx.coroutines.launch
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import java.text.SimpleDateFormat
+import java.util.*
 
-// 색상 정의
 private val MainOrange = Color(0xFFF0724A)
 private val TextPrimary = Color(0xFF1C0E09)
 private val TextSecondary = Color(0xFF999999)
 private val BackgroundWhite = Color(0xFFFFFCFB)
 private val InputBackground = Color(0xFFF5F5F5)
 
-// 데이터 클래스
+@Serializable
 data class CommunityPost(
     val id: String,
-    val userName: String,
-    val userAge: String,
-    val hashtag: String,
-    val profileImageUrl: String,
-    val imageUrl: String,
-    val content: String,
-    var likeCount: Int,
-    val date: String,
-    val category: String,
-    var isLiked: Boolean = false
+    @SerialName("user_id")
+    val userId: String = "",
+    @SerialName("user_name")
+    val userName: String = "",
+    @SerialName("user_age")
+    val userAge: String = "",
+    val hashtag: String = "",
+    @SerialName("profile_image_url")
+    val profileImageUrl: String = "",
+    @SerialName("image_url")
+    val imageUrl: String = "",
+    val content: String = "",
+    @SerialName("like_count")
+    var likeCount: Int = 0,
+    val date: String = "",
+    val category: String = "",
+    @SerialName("created_at")
+    val createdAt: String? = null
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,11 +79,81 @@ data class CommunityPost(
 fun CommunityScreen(
     onBackToCalendar: () -> Unit
 ) {
-    var selectedTab by remember { mutableStateOf(1) } // 0: 나란히, 1: 마음으로
+    var selectedTab by remember { mutableStateOf(1) }
     var showWriteDialog by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(true) }
 
-    val posts = remember(selectedTab) {
-        getSamplePosts(if (selectedTab == 1) "walk_with_heart" else "walk_together")
+    val allPosts = remember { mutableStateListOf<CommunityPost>() }
+    val scope = rememberCoroutineScope()
+
+    // 데이터 로드 함수
+    fun loadPosts() {
+        scope.launch {
+            isLoading = true
+            try {
+                Log.d("CommunityScreen", "=== 데이터 로드 시작 ===")
+
+                val dbPosts = SupabaseClientProvider.client
+                    .from("community_posts")
+                    .select(columns = Columns.ALL)
+                    .decodeList<CommunityPost>()
+
+                Log.d("CommunityScreen", "DB에서 로드된 게시글: ${dbPosts.size}개")
+
+                allPosts.clear()
+
+                // DB 데이터 추가
+                allPosts.addAll(dbPosts)
+
+                // 샘플 데이터도 추가
+                val sampleHeart = getSamplePosts("walk_with_heart")
+                val sampleTogether = getSamplePosts("walk_together")
+
+                // 중복 제거 (ID 기준)
+                val existingIds = allPosts.map { it.id }.toSet()
+                sampleHeart.forEach { sample ->
+                    if (!existingIds.contains(sample.id)) {
+                        allPosts.add(sample)
+                    }
+                }
+                sampleTogether.forEach { sample ->
+                    if (!existingIds.contains(sample.id)) {
+                        allPosts.add(sample)
+                    }
+                }
+
+                // 날짜순 정렬
+                val sorted = allPosts.sortedByDescending { it.date }
+                allPosts.clear()
+                allPosts.addAll(sorted)
+
+                Log.d("CommunityScreen", "최종 게시글 수: ${allPosts.size}개")
+
+            } catch (e: Exception) {
+                Log.e("CommunityScreen", "데이터 로드 실패", e)
+
+                // 에러 시에도 샘플 데이터는 보여주기
+                allPosts.clear()
+                allPosts.addAll(getSamplePosts("walk_with_heart"))
+                allPosts.addAll(getSamplePosts("walk_together"))
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    // 초기 데이터 로드
+    LaunchedEffect(Unit) {
+        loadPosts()
+    }
+
+    val posts = remember(selectedTab, allPosts.size) {
+        val filtered = allPosts.filter {
+            it.category == if (selectedTab == 1) "walk_with_heart" else "walk_together"
+        }.sortedByDescending { it.date }
+
+        Log.d("CommunityScreen", "탭${selectedTab} 필터링 결과: ${filtered.size}개")
+        filtered
     }
 
     Scaffold(
@@ -80,8 +166,7 @@ fun CommunityScreen(
                     ) {
                         Text(
                             text = "이야기 방",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleLarge,
                             color = TextPrimary
                         )
                     }
@@ -89,7 +174,7 @@ fun CommunityScreen(
                 navigationIcon = {
                     IconButton(onClick = onBackToCalendar) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.Rounded.ArrowBack,
                             contentDescription = "뒤로가기",
                             tint = TextPrimary
                         )
@@ -99,8 +184,8 @@ fun CommunityScreen(
                     TextButton(onClick = { showWriteDialog = true }) {
                         Text(
                             text = "글쓰기",
-                            color = MainOrange,
-                            fontSize = 16.sp
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MainOrange
                         )
                     }
                 },
@@ -116,37 +201,131 @@ fun CommunityScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // 탭
             CommunityTabs(
                 selectedTab = selectedTab,
                 onTabSelected = { selectedTab = it }
             )
 
-            // 검색창
             SearchBar()
 
-            // 게시글 리스트
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(vertical = 16.dp)
-            ) {
-                items(posts) { post ->
-                    PostItem(post = post)
+            when {
+                isLoading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "로딩 중...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MainOrange
+                        )
+                    }
+                }
+                posts.isEmpty() -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "아직 게시글이 없습니다",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = TextSecondary
+                            )
+                            Button(
+                                onClick = { loadPosts() },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MainOrange
+                                )
+                            ) {
+                                Text("새로고침", color = Color.White)
+                            }
+                        }
+                    }
+                }
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 20.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        contentPadding = PaddingValues(vertical = 16.dp)
+                    ) {
+                        items(posts, key = { it.id }) { post ->
+                            PostItem(post = post)
+                        }
+                    }
                 }
             }
         }
     }
 
-    // 글쓰기 다이얼로그
     if (showWriteDialog) {
         WritePostDialog(
+            currentCategory = if (selectedTab == 1) "walk_with_heart" else "walk_together",
             onDismiss = { showWriteDialog = false },
-            onSubmit = { title, content, hashtag ->
-                // TODO: 게시글 등록
-                showWriteDialog = false
+            onSubmit = { title, content, hashtag, imageUri ->
+                scope.launch {
+                    try {
+                        val dateFormat = SimpleDateFormat("yyyy.MM.dd", Locale.getDefault())
+
+                        val newPost = CommunityPost(
+                            id = UUID.randomUUID().toString(),
+                            userId = "anonymous",
+                            userName = "새 사용자",
+                            userAge = "13살",
+                            hashtag = hashtag.ifEmpty { "#새글" },
+                            profileImageUrl = "https://via.placeholder.com/40",
+                            imageUrl = imageUri?.toString() ?: "https://via.placeholder.com/328x160",
+                            content = title,
+                            likeCount = 0,
+                            date = dateFormat.format(Date()),
+                            category = if (selectedTab == 1) "walk_with_heart" else "walk_together"
+                        )
+
+                        Log.d("CommunityScreen", "=== 저장 시도 ===")
+                        Log.d("CommunityScreen", "게시글: $newPost")
+
+                        // Supabase에 저장
+                        SupabaseClientProvider.client
+                            .from("community_posts")
+                            .insert(newPost)
+
+                        Log.d("CommunityScreen", "저장 성공!")
+
+                        // 로컬에 즉시 추가
+                        allPosts.add(0, newPost)
+
+                        showWriteDialog = false
+
+                        // 저장 후 다시 로드
+                        loadPosts()
+
+                    } catch (e: Exception) {
+                        Log.e("CommunityScreen", "저장 실패", e)
+
+                        // 저장 실패해도 로컬에는 추가
+                        val dateFormat = SimpleDateFormat("yyyy.MM.dd", Locale.getDefault())
+                        val newPost = CommunityPost(
+                            id = UUID.randomUUID().toString(),
+                            userId = "anonymous",
+                            userName = "새 사용자",
+                            userAge = "13살",
+                            hashtag = hashtag.ifEmpty { "#새글" },
+                            profileImageUrl = "https://via.placeholder.com/40",
+                            imageUrl = imageUri?.toString() ?: "https://via.placeholder.com/328x160",
+                            content = title,
+                            likeCount = 0,
+                            date = dateFormat.format(Date()),
+                            category = if (selectedTab == 1) "walk_with_heart" else "walk_together"
+                        )
+                        allPosts.add(0, newPost)
+                        showWriteDialog = false
+                    }
+                }
             }
         )
     }
@@ -177,7 +356,6 @@ fun CommunityTabs(
             )
         }
 
-        // 인디케이터
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -207,7 +385,7 @@ fun TabItem(
 ) {
     Text(
         text = text,
-        fontSize = 16.sp,
+        style = MaterialTheme.typography.titleMedium,
         color = if (selected) TextPrimary else TextSecondary,
         modifier = modifier
             .clickable(onClick = onClick)
@@ -224,7 +402,7 @@ fun SearchBar() {
         placeholder = {
             Text(
                 text = "오늘 아이와 관련된 어떤 추억이 떠올랐나요?",
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.bodySmall,
                 color = TextSecondary
             )
         },
@@ -238,14 +416,16 @@ fun SearchBar() {
             unfocusedBorderColor = TextSecondary.copy(alpha = 0.3f),
             focusedBorderColor = MainOrange
         ),
-        singleLine = true
+        singleLine = true,
+        textStyle = MaterialTheme.typography.bodyMedium
     )
 }
 
 @Composable
 fun PostItem(post: CommunityPost) {
-    var isLiked by remember { mutableStateOf(post.isLiked) }
+    var isLiked by remember { mutableStateOf(false) }
     var likeCount by remember { mutableStateOf(post.likeCount) }
+    val scope = rememberCoroutineScope()
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -260,12 +440,10 @@ fun PostItem(post: CommunityPost) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // 프로필 정보
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // 프로필 이미지
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(post.profileImageUrl)
@@ -274,10 +452,9 @@ fun PostItem(post: CommunityPost) {
                     contentDescription = "프로필",
                     modifier = Modifier
                         .size(40.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop,
-                    placeholder = painterResource(R.drawable.ic_image),
-                    error = painterResource(R.drawable.ic_image)
+                        .clip(CircleShape)
+                        .background(InputBackground),
+                    contentScale = ContentScale.Crop
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -285,20 +462,19 @@ fun PostItem(post: CommunityPost) {
                 Column {
                     Text(
                         text = post.userName,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = TextPrimary
                     )
                     Row {
                         Text(
                             text = post.userAge,
-                            fontSize = 12.sp,
+                            style = MaterialTheme.typography.bodySmall,
                             color = TextSecondary
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = post.hashtag,
-                            fontSize = 12.sp,
+                            style = MaterialTheme.typography.bodySmall,
                             color = TextSecondary
                         )
                     }
@@ -307,7 +483,6 @@ fun PostItem(post: CommunityPost) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 게시글 이미지 (328x160dp)
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(post.imageUrl)
@@ -315,28 +490,25 @@ fun PostItem(post: CommunityPost) {
                     .build(),
                 contentDescription = "게시글 이미지",
                 modifier = Modifier
-                    .width(328.dp)
+                    .fillMaxWidth()
                     .height(160.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-                contentScale = ContentScale.Crop,
-                placeholder = painterResource(R.drawable.ic_image),
-                error = painterResource(R.drawable.ic_image)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(InputBackground),
+                contentScale = ContentScale.Crop
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 제목
             Text(
                 text = post.content,
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.bodyMedium,
                 color = TextPrimary,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 좋아요 & 날짜
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -347,13 +519,27 @@ fun PostItem(post: CommunityPost) {
                 ) {
                     IconButton(
                         onClick = {
-                            isLiked = !isLiked
-                            likeCount = if (isLiked) likeCount + 1 else likeCount - 1
+                            scope.launch {
+                                try {
+                                    isLiked = !isLiked
+                                    likeCount = if (isLiked) likeCount + 1 else likeCount - 1
+
+                                    SupabaseClientProvider.client
+                                        .from("community_posts")
+                                        .update({
+                                            set("like_count", likeCount)
+                                        }) {
+                                            filter { eq("id", post.id) }
+                                        }
+                                } catch (e: Exception) {
+                                    Log.e("PostItem", "좋아요 업데이트 실패", e)
+                                }
+                            }
                         },
                         modifier = Modifier.size(24.dp)
                     ) {
                         Icon(
-                            imageVector = if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            imageVector = if (isLiked) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
                             contentDescription = "좋아요",
                             tint = if (isLiked) MainOrange else TextSecondary
                         )
@@ -361,14 +547,14 @@ fun PostItem(post: CommunityPost) {
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = likeCount.toString(),
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary
                     )
                 }
 
                 Text(
                     text = post.date,
-                    fontSize = 12.sp,
+                    style = MaterialTheme.typography.bodySmall,
                     color = TextSecondary
                 )
             }
@@ -379,8 +565,9 @@ fun PostItem(post: CommunityPost) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WritePostDialog(
+    currentCategory: String,
     onDismiss: () -> Unit,
-    onSubmit: (String, String, String) -> Unit
+    onSubmit: (String, String, String, Uri?) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
@@ -388,7 +575,6 @@ fun WritePostDialog(
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var showCancelDialog by remember { mutableStateOf(false) }
 
-    // 이미지 선택 런처
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -397,35 +583,37 @@ fun WritePostDialog(
 
     val hasContent = title.isNotEmpty() || content.isNotEmpty() || hashtag.isNotEmpty() || selectedImageUri != null
 
-    AlertDialog(
+    Dialog(
         onDismissRequest = {
             if (hasContent) {
                 showCancelDialog = true
             } else {
                 onDismiss()
             }
-        }
+        },
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
+                .fillMaxHeight(0.9f)
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
             color = BackgroundWhite
         ) {
             Column(
-                modifier = Modifier.padding(24.dp)
+                modifier = Modifier.fillMaxSize()
             ) {
-                // 헤더
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "글쓰기",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleLarge
                     )
                     IconButton(onClick = {
                         if (hasContent) {
@@ -434,147 +622,154 @@ fun WritePostDialog(
                             onDismiss()
                         }
                     }) {
-                        Text("✕", fontSize = 20.sp)
+                        Text("✕", style = MaterialTheme.typography.titleLarge)
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // 제목
-                Text("제목", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    placeholder = { Text("제목을 입력해 주세요.") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // 내용
-                Text("내용", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = content,
-                    onValueChange = { content = it },
-                    placeholder = { Text("내용을 입력해 주세요.") },
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp),
-                    maxLines = 5
-                )
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 20.dp)
+                ) {
+                    Text("제목", style = MaterialTheme.typography.titleSmall)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        placeholder = { Text("제목을 입력해 주세요.") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        textStyle = MaterialTheme.typography.bodyMedium
+                    )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                // 해시태그
-                Text("해시태그 (최대 1개)", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = hashtag,
-                    onValueChange = { hashtag = it },
-                    placeholder = { Text("#참만보강아지") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // 이미지 업로드
-                Text("사진 (최대 5장)", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(8.dp))
-
-                if (selectedImageUri != null) {
-                    // 이미지 미리보기
-                    Box(
+                    Text("내용", style = MaterialTheme.typography.titleSmall)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = content,
+                        onValueChange = { content = it },
+                        placeholder = { Text("내용을 입력해 주세요.") },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(160.dp)
-                    ) {
-                        AsyncImage(
-                            model = selectedImageUri,
-                            contentDescription = "선택된 이미지",
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(RoundedCornerShape(12.dp)),
-                            contentScale = ContentScale.Crop
-                        )
+                            .height(120.dp),
+                        maxLines = 5,
+                        textStyle = MaterialTheme.typography.bodyMedium
+                    )
 
-                        // 삭제 버튼
-                        IconButton(
-                            onClick = { selectedImageUri = null },
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text("해시태그 입력(최대 1개)", style = MaterialTheme.typography.titleSmall)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = hashtag,
+                        onValueChange = { hashtag = it },
+                        placeholder = { Text("#참만보강아지") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        textStyle = MaterialTheme.typography.bodyMedium
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // 사진 선택 부분
+                    Text("사진 등록", style = MaterialTheme.typography.titleSmall)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (selectedImageUri != null) {
+                        Box(
                             modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(8.dp)
-                                .size(32.dp)
-                                .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                                .fillMaxWidth()
+                                .height(120.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "이미지 삭제",
-                                tint = Color.White
+                            AsyncImage(
+                                model = selectedImageUri,
+                                contentDescription = "선택된 이미지",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(12.dp)),
+                                contentScale = ContentScale.Crop
                             )
+
+                            IconButton(
+                                onClick = { selectedImageUri = null },
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(4.dp)
+                                    .size(28.dp)
+                                    .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Close,
+                                    contentDescription = "이미지 삭제",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .border(
+                                    width = 1.dp,
+                                    color = TextSecondary.copy(alpha = 0.3f),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .background(InputBackground)
+                                .clickable { imagePickerLauncher.launch("image/*") },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Add,
+                                    contentDescription = "이미지 추가",
+                                    tint = TextSecondary,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "사진을 추가해 주세요",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextSecondary
+                                )
+                            }
                         }
                     }
-                } else {
-                    // 이미지 선택 버튼
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(160.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .border(
-                                width = 1.dp,
-                                color = TextSecondary.copy(alpha = 0.3f),
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                            .background(InputBackground)
-                            .clickable { imagePickerLauncher.launch("image/*") },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = "이미지 추가",
-                                tint = TextSecondary,
-                                modifier = Modifier.size(40.dp)
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "사진을 추가해 주세요",
-                                fontSize = 14.sp,
-                                color = TextSecondary
-                            )
-                        }
-                    }
+
+                    Spacer(modifier = Modifier.height(80.dp))
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // 등록 버튼
                 Button(
                     onClick = {
                         if (title.isNotEmpty() && content.isNotEmpty()) {
-                            onSubmit(title, content, hashtag)
+                            onSubmit(title, content, hashtag, selectedImageUri)
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
                     enabled = title.isNotEmpty() && content.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MainOrange,
                         disabledContainerColor = TextSecondary
                     )
                 ) {
-                    Text("등록하기", color = Color.White)
+                    Text(
+                        "등록하기",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color.White
+                    )
                 }
             }
         }
     }
 
-    // 취소 확인 다이얼로그
     if (showCancelDialog) {
         AlertDialog(
             onDismissRequest = { showCancelDialog = false },
@@ -596,12 +791,13 @@ fun WritePostDialog(
     }
 }
 
-// 샘플 데이터
+// 샘플 데이터 함수 (assets 이미지 사용)
 private fun getSamplePosts(category: String): List<CommunityPost> {
     return if (category == "walk_with_heart") {
         listOf(
             CommunityPost(
-                id = "1",
+                id = "sample_heart_1",
+                userId = "sample",
                 userName = "여름이",
                 userAge = "13살",
                 hashtag = "#애교쟁이",
@@ -613,22 +809,24 @@ private fun getSamplePosts(category: String): List<CommunityPost> {
                 category = "walk_with_heart"
             ),
             CommunityPost(
-                id = "2",
+                id = "sample_heart_2",
+                userId = "sample",
                 userName = "별이",
                 userAge = "15살",
                 hashtag = "#믿먹지짱먹지",
                 profileImageUrl = "file:///android_asset/별이_프로필.jpg",
                 imageUrl = "file:///android_asset/별이_썸네일.jpg",
-                content = "별이가 따나 첫날밤, 세상이 멈춰버린 것만 같아요.",
+                content = "별이가 떠난 첫날밤, 세상이 멈춰버린 것만 같아요.",
                 likeCount = 5,
                 date = "2025.01.14",
                 category = "walk_with_heart"
             ),
             CommunityPost(
-                id = "3",
+                id = "sample_heart_3",
+                userId = "sample",
                 userName = "하늘이",
                 userAge = "14살",
-                hashtag = "#잇지잉슬게",
+                hashtag = "#잊지않을게",
                 profileImageUrl = "file:///android_asset/하늘이_프로필.jpg",
                 imageUrl = "file:///android_asset/하늘이_썸네일.jpg",
                 content = "하늘이의 마지막 산책사진",
@@ -640,7 +838,8 @@ private fun getSamplePosts(category: String): List<CommunityPost> {
     } else {
         listOf(
             CommunityPost(
-                id = "4",
+                id = "sample_together_1",
+                userId = "sample",
                 userName = "토리",
                 userAge = "10살",
                 hashtag = "#느릿느릿토끼",
@@ -652,7 +851,8 @@ private fun getSamplePosts(category: String): List<CommunityPost> {
                 category = "walk_together"
             ),
             CommunityPost(
-                id = "5",
+                id = "sample_together_2",
+                userId = "sample",
                 userName = "초코",
                 userAge = "13살",
                 hashtag = "#댕댕누우기",
@@ -664,7 +864,8 @@ private fun getSamplePosts(category: String): List<CommunityPost> {
                 category = "walk_together"
             ),
             CommunityPost(
-                id = "6",
+                id = "sample_together_3",
+                userId = "sample",
                 userName = "몽글이",
                 userAge = "14살",
                 hashtag = "#오늘도건강하자",

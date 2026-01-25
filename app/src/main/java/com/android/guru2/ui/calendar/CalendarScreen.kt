@@ -7,16 +7,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.guru2.R
 import com.android.guru2.data.model.DiaryEntry
@@ -33,7 +33,7 @@ import java.util.*
 fun CalendarScreen(
     viewModel: CalendarViewModel = viewModel(),
     onNavigateToHome: () -> Unit,
-    onNavigateToDiary: () -> Unit
+    onNavigateToCommunity: () -> Unit = {}
 ) {
     val selectedDate by viewModel.selectedDate.collectAsState()
     val currentMonth by viewModel.currentMonth.collectAsState()
@@ -49,7 +49,6 @@ fun CalendarScreen(
     var showHealthDialog by remember { mutableStateOf(false) }
     var showScheduleDialog by remember { mutableStateOf(false) }
 
-    // 상세 보기용 상태
     var showDiaryDetail by remember { mutableStateOf<DiaryEntry?>(null) }
     var showHealthDetail by remember { mutableStateOf<HealthRecord?>(null) }
     var showScheduleDetail by remember { mutableStateOf<ImportantSchedule?>(null) }
@@ -64,8 +63,7 @@ fun CalendarScreen(
                     ) {
                         Text(
                             text = "캘린더",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.titleLarge
                         )
                     }
                 },
@@ -78,7 +76,6 @@ fun CalendarScreen(
                     }
                 },
                 actions = {
-                    // 오른쪽 공간 확보 (왼쪽 navigationIcon과 balance)
                     Spacer(modifier = Modifier.width(48.dp))
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -98,7 +95,8 @@ fun CalendarScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_calendar),
                             contentDescription = "캘린더",
-                            tint = Color(0xFFF0724A)
+                            tint = Color(0xFFF0724A),
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 )
@@ -109,18 +107,20 @@ fun CalendarScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_home),
                             contentDescription = "홈",
-                            tint = Color.Gray
+                            tint = Color.Gray,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 )
                 NavigationBarItem(
                     selected = false,
-                    onClick = onNavigateToDiary,
+                    onClick = onNavigateToCommunity,
                     icon = {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_diary),
-                            contentDescription = "일기",
-                            tint = Color.Gray
+                            painter = painterResource(id = R.drawable.ic_community),
+                            contentDescription = "커뮤니티",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 )
@@ -133,7 +133,7 @@ fun CalendarScreen(
                 shape = CircleShape
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_fab_plus),
+                    imageVector = Icons.Rounded.Add,
                     contentDescription = "추가",
                     tint = Color.White
                 )
@@ -164,8 +164,7 @@ fun CalendarScreen(
                     text = "${selectedDate.year}년 ${selectedDate.monthValue}월 ${selectedDate.dayOfMonth}일(${
                         selectedDate.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.KOREAN)
                     })",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(horizontal = 20.dp),
                     color = Color(0xFFF0724A)
                 )
@@ -283,27 +282,26 @@ fun CalendarScreen(
         )
     }
 
-    // 일기 상세 보기
     showDiaryDetail?.let { diary ->
         AlertDialog(
             onDismissRequest = { showDiaryDetail = null },
             title = {
                 Text(
                     text = diary.title,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleMedium
                 )
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         text = diary.date,
-                        fontSize = 14.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = Color.Gray
                     )
                     Divider()
                     Text(
                         text = diary.content,
-                        fontSize = 16.sp
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
             },
@@ -317,28 +315,27 @@ fun CalendarScreen(
         )
     }
 
-    // 건강 기록 상세 보기
     showHealthDetail?.let { record ->
         AlertDialog(
             onDismissRequest = { showHealthDetail = null },
             title = {
                 Text(
                     text = "건강 기록",
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleMedium
                 )
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         text = record.date,
-                        fontSize = 14.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = Color.Gray
                     )
                     Divider()
-                    Text("이상증상: ${record.symptom}", fontSize = 14.sp)
-                    Text("대소변: ${record.treatment}", fontSize = 14.sp)
-                    Text("식사량: ${record.foodIntake}", fontSize = 14.sp)
-                    Text("몸무게: ${record.weight}kg", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text("이상증상: ${record.symptom}", style = MaterialTheme.typography.bodyMedium)
+                    Text("대소변: ${record.treatment}", style = MaterialTheme.typography.bodyMedium)
+                    Text("식사량: ${record.foodIntake}", style = MaterialTheme.typography.bodyMedium)
+                    Text("몸무게: ${record.weight}kg", style = MaterialTheme.typography.bodyMedium)
                 }
             },
             confirmButton = {
@@ -351,29 +348,28 @@ fun CalendarScreen(
         )
     }
 
-    // 일정 상세 보기
     showScheduleDetail?.let { schedule ->
         AlertDialog(
             onDismissRequest = { showScheduleDetail = null },
             title = {
                 Text(
                     text = schedule.title,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleMedium
                 )
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         text = schedule.date,
-                        fontSize = 14.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = Color.Gray
                     )
                     Divider()
                     schedule.location?.let {
-                        Text("장소: $it", fontSize = 14.sp)
+                        Text("장소: $it", style = MaterialTheme.typography.bodyMedium)
                     }
                     schedule.notes?.let {
-                        Text("노트: $it", fontSize = 14.sp)
+                        Text("노트: $it", style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             },
@@ -418,8 +414,7 @@ fun CalendarView(
 
             Text(
                 text = "${currentMonth.year}.${String.format("%02d", currentMonth.monthValue)}",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleMedium
             )
 
             IconButton(onClick = { onMonthChanged(currentMonth.plusMonths(1)) }) {
@@ -441,7 +436,7 @@ fun CalendarView(
                     text = day,
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center,
-                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.bodySmall,
                     color = when (day) {
                         "일" -> Color.Red
                         "토" -> Color.Blue
@@ -512,8 +507,7 @@ fun RowScope.DayCell(
         ) {
             Text(
                 text = date.dayOfMonth.toString(),
-                fontSize = 14.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                style = MaterialTheme.typography.bodySmall,
                 color = when {
                     isSelected -> Color(0xFFF0724A)
                     date.dayOfWeek == DayOfWeek.SUNDAY -> Color(0xFFFF0000)
@@ -553,7 +547,10 @@ fun AddMenuItem(
             tint = Color(0xFFF0724A),
             modifier = Modifier.size(24.dp)
         )
-        Text(text = text, fontSize = 14.sp)
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 }
 
@@ -579,11 +576,14 @@ fun ScheduleItem(
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = schedule.title,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.bodyLarge
             )
             schedule.location?.let {
-                Text(text = it, fontSize = 14.sp, color = Color.Gray)
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
             }
         }
     }
@@ -611,12 +611,11 @@ fun DiaryItem(
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = diary.title,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.bodyLarge
             )
             Text(
                 text = diary.content,
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray,
                 maxLines = 2
             )
@@ -646,12 +645,11 @@ fun HealthRecordItem(
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = record.symptom,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.bodyLarge
             )
             Text(
                 text = "몸무게: ${record.weight}kg",
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )
         }
