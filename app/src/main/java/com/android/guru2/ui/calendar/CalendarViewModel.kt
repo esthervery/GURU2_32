@@ -58,7 +58,7 @@ class CalendarViewModel : ViewModel() {
         val userId = "test_user"
         val dateString = date.toString()
 
-        Log.d("CalendarViewModel", "📅 loadDataForDate - date: $dateString, userId: $userId")
+        Log.d("CalendarViewModel", "loadDataForDate - date: $dateString, userId: $userId")
 
         viewModelScope.launch {
             _isLoading.value = true
@@ -67,13 +67,13 @@ class CalendarViewModel : ViewModel() {
                 val healthRecords = repository.getHealthRecordsByDate(userId, dateString)
                 val schedules = repository.getSchedulesByDate(userId, dateString)
 
-                Log.d("CalendarViewModel", "✅ 로드 완료 - 일기:${diaries.size}, 건강:${healthRecords.size}, 일정:${schedules.size}")
+                Log.d("CalendarViewModel", "로드 완료 - 일기:${diaries.size}, 건강:${healthRecords.size}, 일정:${schedules.size}")
 
                 _diaries.value = diaries
                 _healthRecords.value = healthRecords
                 _schedules.value = schedules
             } catch (e: Exception) {
-                Log.e("CalendarViewModel", "❌ loadDataForDate 에러", e)
+                Log.e("CalendarViewModel", "loadDataForDate 에러", e)
             } finally {
                 _isLoading.value = false
             }
@@ -84,7 +84,7 @@ class CalendarViewModel : ViewModel() {
         val userId = "test_user"
         val yearMonthString = yearMonth.toString()
 
-        Log.d("CalendarViewModel", "📆 loadMonthData - yearMonth: $yearMonthString, userId: $userId")
+        Log.d("CalendarViewModel", "loadMonthData - yearMonth: $yearMonthString, userId: $userId")
 
         viewModelScope.launch {
             _isLoading.value = true
@@ -93,7 +93,7 @@ class CalendarViewModel : ViewModel() {
                 val healthRecords = repository.getHealthRecordsByMonth(userId, yearMonthString)
                 val schedules = repository.getSchedulesByMonth(userId, yearMonthString)
 
-                Log.d("CalendarViewModel", "📊 이번 달 데이터 - 일기:${diaries.size}개, 건강:${healthRecords.size}개, 일정:${schedules.size}개")
+                Log.d("CalendarViewModel", "이번 달 데이터 - 일기:${diaries.size}개, 건강:${healthRecords.size}개, 일정:${schedules.size}개")
 
                 diaries.forEach { Log.d("CalendarViewModel", "  📝 일기 날짜: ${it.date}") }
                 healthRecords.forEach { Log.d("CalendarViewModel", "  🏥 건강 날짜: ${it.date}") }
@@ -103,12 +103,12 @@ class CalendarViewModel : ViewModel() {
                 _datesWithHealth.value = healthRecords.map { LocalDate.parse(it.date) }.toSet()
                 _datesWithSchedule.value = schedules.map { LocalDate.parse(it.date) }.toSet()
 
-                Log.d("CalendarViewModel", "🐾 발바닥 표시될 날짜들:")
+                Log.d("CalendarViewModel", "발바닥 표시될 날짜들:")
                 Log.d("CalendarViewModel", "  일기: ${_datesWithDiary.value}")
                 Log.d("CalendarViewModel", "  건강: ${_datesWithHealth.value}")
                 Log.d("CalendarViewModel", "  일정: ${_datesWithSchedule.value}")
             } catch (e: Exception) {
-                Log.e("CalendarViewModel", "❌ loadMonthData 에러", e)
+                Log.e("CalendarViewModel", "loadMonthData 에러", e)
             } finally {
                 _isLoading.value = false
             }
@@ -124,7 +124,7 @@ class CalendarViewModel : ViewModel() {
             content = content
         )
 
-        Log.d("CalendarViewModel", "💾 일기 저장 - date: ${diary.date}, title: ${diary.title}")
+        Log.d("CalendarViewModel", "일기 저장 - date: ${diary.date}, title: ${diary.title}")
 
         viewModelScope.launch {
             _isLoading.value = true
@@ -161,7 +161,7 @@ class CalendarViewModel : ViewModel() {
             weight = weight
         )
 
-        Log.d("CalendarViewModel", "💾 건강 기록 저장 - date: ${record.date}, symptom: ${record.symptom}")
+        Log.d("CalendarViewModel", "건강 기록 저장 - date: ${record.date}, symptom: ${record.symptom}")
 
         viewModelScope.launch {
             _isLoading.value = true
@@ -196,14 +196,14 @@ class CalendarViewModel : ViewModel() {
             notes = notes.ifEmpty { null }
         )
 
-        Log.d("CalendarViewModel", "💾 일정 저장 - date: ${schedule.date}, title: ${schedule.title}")
+        Log.d("CalendarViewModel", "일정 저장 - date: ${schedule.date}, title: ${schedule.title}")
 
         viewModelScope.launch {
             _isLoading.value = true
             val success = repository.insertSchedule(schedule)
             _isLoading.value = false
 
-            Log.d("CalendarViewModel", if (success) "✅ 저장 성공!" else "❌ 저장 실패!")
+            Log.d("CalendarViewModel", if (success) "저장 성공!" else "❌ 저장 실패!")
 
             if (success) {
                 loadDataForDate(_selectedDate.value)
@@ -216,7 +216,7 @@ class CalendarViewModel : ViewModel() {
     }
 
     init {
-        Log.d("CalendarViewModel", "🚀 ViewModel 초기화")
+        Log.d("CalendarViewModel", "ViewModel 초기화")
         loadDataForDate(_selectedDate.value)
         loadMonthData(_currentMonth.value)
     }

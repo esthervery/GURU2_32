@@ -1,5 +1,6 @@
 package com.android.guru2.ui.community
 
+import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -39,6 +40,7 @@ import com.android.guru2.R
 import com.android.guru2.data.SupabaseClientProvider
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -74,17 +76,53 @@ data class CommunityPost(
     val createdAt: String? = null
 )
 
+// Supabase Storage에 이미지 업로드하는 함수
+suspend fun uploadImageToSupabase(context: Context, uri: Uri, postId: String): String? {
+    return try {
+        val inputStream = context.contentResolver.openInputStream(uri)
+        val bytes = inputStream?.readBytes()
+        inputStream?.close()
+
+        if (bytes == null) {
+            Log.e("ImageUpload", "이미지 바이트 읽기 실패")
+            return null
+        }
+
+        val fileName = "post_${postId}_${System.currentTimeMillis()}.jpg"
+
+        // Supabase Storage의 'community-images' 버킷에 업로드
+        val bucket = SupabaseClientProvider.client.storage.from("community-images")
+
+        // upload 함수 수정: path와 data만 전달
+        bucket.upload(fileName, bytes) {
+            upsert = false
+        }
+
+        // 업로드된 이미지의 Public URL 가져오기
+        val publicUrl = bucket.publicUrl(fileName)
+
+        Log.d("ImageUpload", "업로드 성공: $publicUrl")
+        publicUrl
+
+    } catch (e: Exception) {
+        Log.e("ImageUpload", "이미지 업로드 실패", e)
+        null
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommunityScreen(
     onBackToCalendar: () -> Unit
 ) {
+    // selectedTab: 0 = "나란히 걷기", 1 = "마음으로 걷기"
     var selectedTab by remember { mutableStateOf(1) }
     var showWriteDialog by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(true) }
 
     val allPosts = remember { mutableStateListOf<CommunityPost>() }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     // 데이터 로드 함수
     fun loadPosts() {
@@ -101,15 +139,12 @@ fun CommunityScreen(
                 Log.d("CommunityScreen", "DB에서 로드된 게시글: ${dbPosts.size}개")
 
                 allPosts.clear()
-
-                // DB 데이터 추가
                 allPosts.addAll(dbPosts)
 
-                // 샘플 데이터도 추가
+                // 샘플 데이터 항상 추가 (중복 제거)
                 val sampleHeart = getSamplePosts("walk_with_heart")
                 val sampleTogether = getSamplePosts("walk_together")
 
-                // 중복 제거 (ID 기준)
                 val existingIds = allPosts.map { it.id }.toSet()
                 sampleHeart.forEach { sample ->
                     if (!existingIds.contains(sample.id)) {
@@ -122,8 +157,10 @@ fun CommunityScreen(
                     }
                 }
 
-                // 날짜순 정렬
-                val sorted = allPosts.sortedByDescending { it.date }
+                // 날짜순 정렬 (최신순)
+                val sorted = allPosts.sortedByDescending {
+                    it.createdAt ?: it.date
+                }
                 allPosts.clear()
                 allPosts.addAll(sorted)
 
@@ -132,7 +169,7 @@ fun CommunityScreen(
             } catch (e: Exception) {
                 Log.e("CommunityScreen", "데이터 로드 실패", e)
 
-                // 에러 시에도 샘플 데이터는 보여주기
+                // 에러 시 샘플 데이터 표시
                 allPosts.clear()
                 allPosts.addAll(getSamplePosts("walk_with_heart"))
                 allPosts.addAll(getSamplePosts("walk_together"))
@@ -147,12 +184,12 @@ fun CommunityScreen(
         loadPosts()
     }
 
+    // 탭에 따라 필터링된 게시글
     val posts = remember(selectedTab, allPosts.size) {
-        val filtered = allPosts.filter {
-            it.category == if (selectedTab == 1) "walk_with_heart" else "walk_together"
-        }.sortedByDescending { it.date }
+        val categoryName = if (selectedTab == 1) "walk_with_heart" else "walk_together"
+        val filtered = allPosts.filter { it.category == categoryName }
 
-        Log.d("CommunityScreen", "탭${selectedTab} 필터링 결과: ${filtered.size}개")
+        Log.d("CommunityScreen", "탭${selectedTab} (${categoryName}) 필터링 결과: ${filtered.size}개")
         filtered
     }
 
@@ -216,7 +253,7 @@ fun CommunityScreen(
                     ) {
                         Text(
                             text = "로딩 중...",
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyLarge,
                             color = MainOrange
                         )
                     }
@@ -270,34 +307,48 @@ fun CommunityScreen(
             onSubmit = { title, content, hashtag, imageUri ->
                 scope.launch {
                     try {
+                        val postId = UUID.randomUUID().toString()
                         val dateFormat = SimpleDateFormat("yyyy.MM.dd", Locale.getDefault())
+                        val currentDate = dateFormat.format(Date())
+
+                        // 이미지를 Supabase Storage에 업로드
+                        var uploadedImageUrl = "https://via.placeholder.com/328x160"
+
+                        if (imageUri != null) {
+                            Log.d("CommunityScreen", "이미지 업로드 시작...")
+                            val imageUrl = uploadImageToSupabase(context, imageUri, postId)
+                            if (imageUrl != null) {
+                                uploadedImageUrl = imageUrl
+                                Log.d("CommunityScreen", "이미지 업로드 성공: $uploadedImageUrl")
+                            } else {
+                                Log.e("CommunityScreen", "이미지 업로드 실패")
+                            }
+                        }
 
                         val newPost = CommunityPost(
-                            id = UUID.randomUUID().toString(),
+                            id = postId,
                             userId = "anonymous",
                             userName = "새 사용자",
                             userAge = "13살",
-                            hashtag = hashtag.ifEmpty { "#새글" },
+                            hashtag = if (hashtag.startsWith("#")) hashtag else "#$hashtag",
                             profileImageUrl = "https://via.placeholder.com/40",
-                            imageUrl = imageUri?.toString() ?: "https://via.placeholder.com/328x160",
+                            imageUrl = uploadedImageUrl,
                             content = title,
                             likeCount = 0,
-                            date = dateFormat.format(Date()),
-                            category = if (selectedTab == 1) "walk_with_heart" else "walk_together"
+                            date = currentDate,
+                            category = if (selectedTab == 1) "walk_with_heart" else "walk_together",
+                            createdAt = null
                         )
 
-                        Log.d("CommunityScreen", "=== 저장 시도 ===")
+                        Log.d("CommunityScreen", "=== DB 저장 시도 ===")
                         Log.d("CommunityScreen", "게시글: $newPost")
 
-                        // Supabase에 저장
+                        // Supabase DB에 저장
                         SupabaseClientProvider.client
                             .from("community_posts")
                             .insert(newPost)
 
-                        Log.d("CommunityScreen", "저장 성공!")
-
-                        // 로컬에 즉시 추가
-                        allPosts.add(0, newPost)
+                        Log.d("CommunityScreen", "DB 저장 성공!")
 
                         showWriteDialog = false
 
@@ -306,23 +357,6 @@ fun CommunityScreen(
 
                     } catch (e: Exception) {
                         Log.e("CommunityScreen", "저장 실패", e)
-
-                        // 저장 실패해도 로컬에는 추가
-                        val dateFormat = SimpleDateFormat("yyyy.MM.dd", Locale.getDefault())
-                        val newPost = CommunityPost(
-                            id = UUID.randomUUID().toString(),
-                            userId = "anonymous",
-                            userName = "새 사용자",
-                            userAge = "13살",
-                            hashtag = hashtag.ifEmpty { "#새글" },
-                            profileImageUrl = "https://via.placeholder.com/40",
-                            imageUrl = imageUri?.toString() ?: "https://via.placeholder.com/328x160",
-                            content = title,
-                            likeCount = 0,
-                            date = dateFormat.format(Date()),
-                            category = if (selectedTab == 1) "walk_with_heart" else "walk_together"
-                        )
-                        allPosts.add(0, newPost)
                         showWriteDialog = false
                     }
                 }
@@ -361,13 +395,14 @@ fun CommunityTabs(
                 .fillMaxWidth()
                 .height(2.dp)
         ) {
+            val screenWidth = LocalContext.current.resources.displayMetrics.widthPixels
             val indicatorOffset by animateDpAsState(
-                targetValue = if (selectedTab == 0) 0.dp else (LocalContext.current.resources.displayMetrics.widthPixels / 2).dp,
+                targetValue = if (selectedTab == 0) 0.dp else (screenWidth / 2 / LocalContext.current.resources.displayMetrics.density).dp,
                 label = "tab_indicator"
             )
             Box(
                 modifier = Modifier
-                    .width((LocalContext.current.resources.displayMetrics.widthPixels / 2).dp)
+                    .width((screenWidth / 2 / LocalContext.current.resources.displayMetrics.density).dp)
                     .height(2.dp)
                     .offset(x = indicatorOffset)
                     .background(TextPrimary)
@@ -487,6 +522,8 @@ fun PostItem(post: CommunityPost) {
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(post.imageUrl)
                     .crossfade(true)
+                    .placeholder(R.drawable.ic_launcher_background)
+                    .error(R.drawable.ic_launcher_background)
                     .build(),
                 contentDescription = "게시글 이미지",
                 modifier = Modifier
@@ -529,7 +566,9 @@ fun PostItem(post: CommunityPost) {
                                         .update({
                                             set("like_count", likeCount)
                                         }) {
-                                            filter { eq("id", post.id) }
+                                            filter {
+                                                eq("id", post.id)
+                                            }
                                         }
                                 } catch (e: Exception) {
                                     Log.e("PostItem", "좋아요 업데이트 실패", e)
@@ -673,7 +712,6 @@ fun WritePostDialog(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // 사진 선택 부분
                     Text("사진 등록", style = MaterialTheme.typography.titleSmall)
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -791,7 +829,7 @@ fun WritePostDialog(
     }
 }
 
-// 샘플 데이터 함수 (assets 이미지 사용)
+// 샘플 데이터
 private fun getSamplePosts(category: String): List<CommunityPost> {
     return if (category == "walk_with_heart") {
         listOf(
@@ -820,19 +858,6 @@ private fun getSamplePosts(category: String): List<CommunityPost> {
                 likeCount = 5,
                 date = "2025.01.14",
                 category = "walk_with_heart"
-            ),
-            CommunityPost(
-                id = "sample_heart_3",
-                userId = "sample",
-                userName = "하늘이",
-                userAge = "14살",
-                hashtag = "#잊지않을게",
-                profileImageUrl = "file:///android_asset/하늘이_프로필.jpg",
-                imageUrl = "file:///android_asset/하늘이_썸네일.jpg",
-                content = "하늘이의 마지막 산책사진",
-                likeCount = 5,
-                date = "2025.01.12",
-                category = "walk_with_heart"
             )
         )
     } else {
@@ -848,32 +873,6 @@ private fun getSamplePosts(category: String): List<CommunityPost> {
                 content = "토리와 오랜만에 산책!!",
                 likeCount = 5,
                 date = "2025.01.17",
-                category = "walk_together"
-            ),
-            CommunityPost(
-                id = "sample_together_2",
-                userId = "sample",
-                userName = "초코",
-                userAge = "13살",
-                hashtag = "#댕댕누우기",
-                profileImageUrl = "file:///android_asset/초코_프로필.jpg",
-                imageUrl = "file:///android_asset/초코_썸네일.jpg",
-                content = "초코를 위한 천연 보양식",
-                likeCount = 16,
-                date = "2025.01.15",
-                category = "walk_together"
-            ),
-            CommunityPost(
-                id = "sample_together_3",
-                userId = "sample",
-                userName = "몽글이",
-                userAge = "14살",
-                hashtag = "#오늘도건강하자",
-                profileImageUrl = "file:///android_asset/몽글이_프로필.jpg",
-                imageUrl = "file:///android_asset/몽글이_썸네일.jpg",
-                content = "14살 몽글이가 밥먹다 서성거려요.",
-                likeCount = 5,
-                date = "2025.01.11",
                 category = "walk_together"
             )
         )

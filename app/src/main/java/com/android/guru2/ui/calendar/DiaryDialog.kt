@@ -27,10 +27,10 @@ fun DiaryDialog(
 
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)  // 이게 핵심!
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
-            modifier = Modifier.fillMaxSize(),  // 100% 차지!
+            modifier = Modifier.fillMaxSize(),
             color = Color.White
         ) {
             Column(
@@ -70,7 +70,7 @@ fun DiaryDialog(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_close),
                             contentDescription = "취소",
-                            modifier = Modifier.size(32.dp)  // 크기 키움!
+                            modifier = Modifier.size(32.dp)
                         )
                     }
                 }

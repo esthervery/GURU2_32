@@ -32,7 +32,7 @@ fun HealthRecordDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false)  // 풀스크린!
     ) {
         Surface(
-            modifier = Modifier.fillMaxSize(),  // 100% 차지!
+            modifier = Modifier.fillMaxSize(),
             color = Color.White
         ) {
             Column(
@@ -64,7 +64,7 @@ fun HealthRecordDialog(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_close),
                             contentDescription = "취소",
-                            modifier = Modifier.size(32.dp)  // 크기 키움!
+                            modifier = Modifier.size(32.dp)
                         )
                     }
                 }
