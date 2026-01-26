@@ -78,6 +78,8 @@ class SignUpFragment : Fragment(R.layout.fragment_sign_up) {
 
         dialogView.findViewById<Button>(R.id.btn_dialog_close).setOnClickListener {
             confirmDialog?.dismiss()
+            // 먼저 백스택에서 SignUpFragment의 기록을 지움
+            parentFragmentManager.popBackStack()
 
             // LoginFragment 생성 시 "회원가입에서 왔다" 표시
             val loginFragment = LoginFragment().apply {
@@ -85,10 +87,7 @@ class SignUpFragment : Fragment(R.layout.fragment_sign_up) {
                     putBoolean("fromSignUp", true)
                 }
             }
-
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, loginFragment)
-                .commit()
+            (activity as? StartActivity)?.replaceFragment(loginFragment)
         }
 
         confirmDialog?.show()
