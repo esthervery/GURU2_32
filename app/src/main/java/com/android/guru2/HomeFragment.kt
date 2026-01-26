@@ -65,7 +65,7 @@ class HomeFragment : Fragment() {
 
         // 재생 버튼 클릭 시 (WebP 애니메이션 실행)
         btnPlay.setOnClickListener {
-            playAnimation(ivCharacter, ivAnimation, R.drawable.ball_noblur, 2500L)
+            playAnimation(ivCharacter, ivAnimation, R.drawable.ball_animate, 2500L)
         }
 
         btnFeed.setOnClickListener {

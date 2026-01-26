@@ -12,7 +12,7 @@
         android:layout_width="70dp"
         android:layout_height="wrap_content"
         android:adjustViewBounds="true"
-        android:src="@drawable/app_logo"
+        android:src="@drawable/logo"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -51,6 +51,7 @@
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/btn_add_photo"
+            android:contentDescription="반려견 사진 추가 버튼"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@android:drawable/ic_input_add"
@@ -113,12 +114,13 @@
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_marginEnd="30dp"
-            android:src="@drawable/female_btn"
-            android:alpha="0.5" /> <ImageView
+            android:src="@drawable/btn_female"
+            android:alpha="0.5" />
+        <ImageView
         android:id="@+id/iv_male"
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:src="@drawable/male_btn"
+        android:src="@drawable/btn_male"
         android:alpha="0.5" />
     </LinearLayout>
 

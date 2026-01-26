@@ -48,7 +48,7 @@ class StarFragment : Fragment() {
 
         // 버튼 리스너 설정 (놀아주기 - ball_noblur 적용)
         btnPlay.setOnClickListener {
-            playAnimation(ivStarCharacter, ivStarAnimation, R.drawable.ball_noblur, 2500L)
+            playAnimation(ivStarCharacter, ivStarAnimation, R.drawable.ball_animate, 2500L)
         }
 
         btnFeed.setOnClickListener {
