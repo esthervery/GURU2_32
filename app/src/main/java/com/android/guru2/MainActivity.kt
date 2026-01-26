@@ -24,23 +24,22 @@ import com.android.guru2.ui.calendar.CalendarViewModel
 import com.android.guru2.ui.community.CommunityScreen //
 
 class MainActivity : AppCompatActivity() {
-    // 공용 뷰 모델 초기화
+    // MainViewModel을 Activity 레벨에서 유지
     private val viewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // 1. 초기 화면 설정 (홈)
+        // 초기 화면 설정 (홈)
         if (savedInstanceState == null) {
             replaceFragment(HomeFragment())
         }
 
-        // 2. Compose로 구현된 통합 바텀 네비게이션 설정
+        // 통합 바텀 네비게이션 (ComposeView 연결)
         val composeNavView = findViewById<ComposeView>(R.id.compose_bottom_nav)
         composeNavView.setContent {
-            // 선택된 아이템 상태 관리 (0: 캘린더, 1: 홈, 2: 커뮤니티)
-            var selectedItem by remember { mutableIntStateOf(1) }
+            var selectedItem by remember { mutableIntStateOf(1) } // 홈(1)이 기본
 
             AppBottomNavigation(
                 selectedItem = selectedItem,
@@ -64,63 +63,29 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-/**
- * 팀원의 디자인을 일괄 적용한 바텀 네비게이션 컴포저블
- */
+// ---------------- Fragment Wrappers & Navigation Bar ----------------
+// 통합 바텀네비게이션 컴포저블
 @Composable
 fun AppBottomNavigation(selectedItem: Int, onItemSelected: (Int) -> Unit) {
-    NavigationBar(
-        containerColor = Color.White,
-        modifier = Modifier.height(70.dp)
-    ) {
-        // 왼쪽: 캘린더
-        NavigationBarItem(
-            selected = selectedItem == 0,
-            onClick = { onItemSelected(0) },
-            icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_calendar),
-                    contentDescription = "캘린더",
-                    tint = if (selectedItem == 0) Color(0xFFF0724A) else Color.Gray,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+    NavigationBar(containerColor = Color.White, modifier = Modifier.height(70.dp)) {
+        val items = listOf(
+            Triple(0, R.drawable.ic_calendar, "캘린더"),
+            Triple(1, R.drawable.ic_home, "홈"),
+            Triple(2, R.drawable.ic_community, "커뮤니티")
         )
-        // 중간: 홈 (HomeFragment/StarFragment 구역)
-        NavigationBarItem(
-            selected = selectedItem == 1,
-            onClick = { onItemSelected(1) },
-            icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_home),
-                    contentDescription = "홈",
-                    tint = if (selectedItem == 1) Color(0xFFF0724A) else Color.Gray,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        )
-        // 오른쪽: 커뮤니티
-        NavigationBarItem(
-            selected = selectedItem == 2,
-            onClick = { onItemSelected(2) },
-            icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_community),
-                    contentDescription = "커뮤니티",
-                    tint = if (selectedItem == 2) Color(0xFFF0724A) else Color.Gray,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        )
+        items.forEach { (index, iconRes, label) ->
+            NavigationBarItem(
+                selected = selectedItem == index,
+                onClick = { onItemSelected(index) },
+                icon = { Icon(painter = painterResource(id = iconRes), contentDescription = label, tint = if (selectedItem == index) Color(0xFFF0724A) else Color.Gray, modifier = Modifier.size(24.dp)) }
+            )
+        }
     }
 }
 
-/**
- * 캘린더 Compose 화면을 Fragment로 래핑
- */
+//캘린더 Compose 화면을 Fragment로 래핑
 class CalendarComposeFragment : Fragment() {
-    private val calendarViewModel: com.android.guru2.ui.calendar.CalendarViewModel by viewModels()
-
+    private val calendarViewModel: CalendarViewModel by viewModels()
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return ComposeView(requireContext()).apply {
             setContent {
@@ -134,16 +99,12 @@ class CalendarComposeFragment : Fragment() {
     }
 }
 
-/**
- * 커뮤니티 Compose 화면을 Fragment로 래핑
- */
+// 커뮤니티 Compose 화면을 Fragment로 래핑
 class CommunityComposeFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return ComposeView(requireContext()).apply {
             setContent {
-                CommunityScreen(
-                    onBackToCalendar = { (activity as? MainActivity)?.replaceFragment(CalendarComposeFragment()) }
-                )
+                CommunityScreen(onBackToCalendar = { (activity as? MainActivity)?.replaceFragment(CalendarComposeFragment()) })
             }
         }
     }

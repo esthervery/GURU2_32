@@ -18,6 +18,10 @@ class MainViewModel : ViewModel() {
     // 현재 모드 상태 저장 (HOME 또는 STAR)
     var isStarMode = MutableLiveData<Boolean>(false)
 
+    fun setCharacterUrl(url: String) {
+        _characterUrl.value = url
+    }
+
     fun loadCharacter() {
         if (_characterUrl.value != null) return // 이미 데이터가 있으면 재호출 안 함
 
