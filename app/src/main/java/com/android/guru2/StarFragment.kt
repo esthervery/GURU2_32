@@ -51,16 +51,14 @@ class StarFragment : Fragment() {
             playAnimation(ivStarCharacter, ivStarAnimation, R.drawable.ball_noblur, 2500L)
         }
 
-        // 버튼 리스너 설정 (밥주기 - 예시 파일명, 실제 파일명으로 바꾸세요)
-//        btnFeed.setOnClickListener {
-//            // R.drawable.feed_animation 등으로 변경해서 쓰시면 됩니다.
-//            playAnimation(ivStarCharacter, ivStarAnimation, R.drawable.ball_noblur, 3000L)
-//        }
+        btnFeed.setOnClickListener {
+            // R.drawable.feed_animation 등으로 변경해서 쓰시면 됩니다.
+            playAnimation(ivStarCharacter, ivStarAnimation, R.drawable.meal_animate, 2500L)
+        }
 
-        // 5. 버튼 리스너 설정 (쓰다듬기 - 예시 파일명)
-//        btnWash.setOnClickListener {
-//            playAnimation(ivStarCharacter, ivStarAnimation, R.drawable.ball_noblur, 3000L)
-//        }
+        btnWash.setOnClickListener {
+            playAnimation(ivStarCharacter, ivStarAnimation, R.drawable.hand_animate, 2500L)
+        }
     }
 
     //애니메이션을 재생하고 일정 시간 후 숨기는 공통 함수
