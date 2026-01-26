@@ -215,6 +215,132 @@ class CalendarViewModel : ViewModel() {
         }
     }
 
+    // 일기 삭제
+    fun deleteDiary(diary: DiaryEntry, onSuccess: () -> Unit, onError: () -> Unit) {
+        Log.d("CalendarViewModel", "일기 삭제 - id: ${diary.id}")
+
+        viewModelScope.launch {
+            _isLoading.value = true
+            val success = repository.deleteDiary(diary.id)
+            _isLoading.value = false
+
+            Log.d("CalendarViewModel", if (success) "✅ 삭제 성공!" else "❌ 삭제 실패!")
+
+            if (success) {
+                loadDataForDate(_selectedDate.value)
+                loadMonthData(_currentMonth.value)
+                onSuccess()
+            } else {
+                onError()
+            }
+        }
+    }
+
+    // 건강 기록 삭제
+    fun deleteHealthRecord(record: HealthRecord, onSuccess: () -> Unit, onError: () -> Unit) {
+        Log.d("CalendarViewModel", "건강 기록 삭제 - id: ${record.id}")
+
+        viewModelScope.launch {
+            _isLoading.value = true
+            val success = repository.deleteHealthRecord(record.id)
+            _isLoading.value = false
+
+            Log.d("CalendarViewModel", if (success) "✅ 삭제 성공!" else "❌ 삭제 실패!")
+
+            if (success) {
+                loadDataForDate(_selectedDate.value)
+                loadMonthData(_currentMonth.value)
+                onSuccess()
+            } else {
+                onError()
+            }
+        }
+    }
+
+    // 일정 삭제
+    fun deleteSchedule(schedule: ImportantSchedule, onSuccess: () -> Unit, onError: () -> Unit) {
+        Log.d("CalendarViewModel", "일정 삭제 - id: ${schedule.id}")
+
+        viewModelScope.launch {
+            _isLoading.value = true
+            val success = repository.deleteSchedule(schedule.id)
+            _isLoading.value = false
+
+            Log.d("CalendarViewModel", if (success) "✅ 삭제 성공!" else "❌ 삭제 실패!")
+
+            if (success) {
+                loadDataForDate(_selectedDate.value)
+                loadMonthData(_currentMonth.value)
+                onSuccess()
+            } else {
+                onError()
+            }
+        }
+    }
+
+    // 일기 수정
+    fun updateDiary(diary: DiaryEntry, onSuccess: () -> Unit, onError: () -> Unit) {
+        Log.d("CalendarViewModel", "일기 수정 - id: ${diary.id}")
+
+        viewModelScope.launch {
+            _isLoading.value = true
+            val success = repository.updateDiary(diary)
+            _isLoading.value = false
+
+            Log.d("CalendarViewModel", if (success) "✅ 수정 성공!" else "❌ 수정 실패!")
+
+            if (success) {
+                loadDataForDate(_selectedDate.value)
+                loadMonthData(_currentMonth.value)
+                onSuccess()
+            } else {
+                onError()
+            }
+        }
+    }
+
+    // 건강 기록 수정
+    fun updateHealthRecord(record: HealthRecord, onSuccess: () -> Unit, onError: () -> Unit) {
+        Log.d("CalendarViewModel", "건강 기록 수정 - id: ${record.id}")
+
+        viewModelScope.launch {
+            _isLoading.value = true
+            val success = repository.updateHealthRecord(record)
+            _isLoading.value = false
+
+            Log.d("CalendarViewModel", if (success) "✅ 수정 성공!" else "❌ 수정 실패!")
+
+            if (success) {
+                loadDataForDate(_selectedDate.value)
+                loadMonthData(_currentMonth.value)
+                onSuccess()
+            } else {
+                onError()
+            }
+        }
+    }
+
+    // 일정 수정
+    fun updateSchedule(schedule: ImportantSchedule, onSuccess: () -> Unit, onError: () -> Unit) {
+        Log.d("CalendarViewModel", "일정 수정 - id: ${schedule.id}")
+
+        viewModelScope.launch {
+            _isLoading.value = true
+            val success = repository.updateSchedule(schedule)
+            _isLoading.value = false
+
+            Log.d("CalendarViewModel", if (success) "✅ 수정 성공!" else "❌ 수정 실패!")
+
+            if (success) {
+                loadDataForDate(_selectedDate.value)
+                loadMonthData(_currentMonth.value)
+                onSuccess()
+            } else {
+                onError()
+            }
+        }
+    }
+
     init {
         Log.d("CalendarViewModel", "ViewModel 초기화")
         loadDataForDate(_selectedDate.value)
