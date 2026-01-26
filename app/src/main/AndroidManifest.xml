@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <!-- supabase 사용을 위한 인터넷 기능 추가 -->
+
+    <!-- 인터넷 권한 (Supabase 연결용) -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- 갤러리 이미지 접근 권한 -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
 
 <!--    petInfoActivity에서 갤러리 접근 -->
     <!-- Android 13+ (API 33+) -->
@@ -26,26 +33,30 @@
         <activity
             android:name=".PetInfoActivity"
             android:exported="false" />
+
         <activity
             android:name=".StartActivity"
             android:exported="true"
             android:launchMode="singleTask">
+            <!-- 1. 앱 런처 아이콘 (메인 진입점) -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- 2. 이메일 인증 링크용 딥링크 -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <!-- 이메일 -> 다시 앱으로 돌아올 때 딥링크? -->
+              
+                <!-- Supabase 이메일 인증 후 리다이렉트 -->
                 <data
-                    android:host="confirm-signup"
-                    android:scheme="app" />
+                    android:scheme="app"
+                    android:host="confirm-signup"/>
+                <!-- 실제 URL: app://confirm-signup -->
             </intent-filter>
         </activity>
+
         <activity
             android:name=".MainActivity"
             android:exported="false" />
