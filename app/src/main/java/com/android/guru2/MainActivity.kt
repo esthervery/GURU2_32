@@ -47,7 +47,14 @@ class MainActivity : AppCompatActivity() {
                     selectedItem = index
                     when (index) {
                         0 -> replaceFragment(CalendarComposeFragment())
-                        1 -> replaceFragment(HomeFragment())
+                        1 -> {
+                            // 상태 체크: StarMode가 true면 StarFragment를, 아니면 HomeFragment를 띄움
+                            if (viewModel.isStarMode.value == true) {
+                                replaceFragment(StarFragment())
+                            } else {
+                                replaceFragment(HomeFragment())
+                            }
+                        }
                         2 -> replaceFragment(CommunityComposeFragment())
                     }
                 }

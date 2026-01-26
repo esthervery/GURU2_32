@@ -107,6 +107,8 @@ class HomeFragment : Fragment() {
 
         dialogView.findViewById<Button>(R.id.btn_alert_cancel).setOnClickListener { alertDialog.dismiss() }
         dialogView.findViewById<Button>(R.id.btn_alert_confirm).setOnClickListener {
+            // 뷰모델에 '강아지가 무지개 다리를 건넜음' 확정 기록
+            viewModel.isStarMode.value = true
             (activity as? MainActivity)?.replaceFragment(StarFragment())
             alertDialog.dismiss()
         }
