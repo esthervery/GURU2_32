@@ -18,6 +18,7 @@
 
     <ImageButton
         android:id="@+id/btn_rainbow"
+        android:contentDescription="starFragment로 화면 전환"
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:layout_marginTop="24dp"
@@ -28,52 +29,78 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-<!--    kt 파일에서 렌더링 예정. -->
-<!--    iv_main_character의 android:src에 기본 캐릭터 이미지를 미리 넣어두는 것이 좋음-->
-
-    <ImageView
-        android:id="@+id/iv_main_character"
-        android:layout_width="180dp"
-        android:layout_height="180dp"
+    <FrameLayout
+        android:id="@+id/layout_center_area"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
         android:layout_marginBottom="120dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.598" />
+        app:layout_constraintVertical_bias="0.598">
 
-    <LinearLayout
-        android:id="@+id/layout_actions"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
-        android:gravity="center"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        <ImageView
+            android:layout_marginStart="90dp"
+            android:layout_marginEnd="90dp"
+            android:layout_marginTop="60dp"
+            android:layout_marginBottom="15dp"
+            android:id="@+id/iv_main_character"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="visible" />
+
+        <TextureView
+            android:id="@+id/tv_action_video"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+    </FrameLayout>
 
         <LinearLayout
-            android:id="@+id/btn_play"
-            android:layout_width="100dp"
+            android:id="@+id/layout_actions"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_marginBottom="40dp"
             android:gravity="center"
-            android:orientation="vertical"
-            android:padding="12dp">
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="놀아주기"
-                android:textColor="#5D4037"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <ImageButton
+                android:id="@+id/btn_action_play"
+                android:contentDescription="play 비디오 재생"
+                android:layout_width="0dp"
+                android:layout_height="80dp"
+                android:layout_weight="1"
+                android:layout_margin="4dp"
+                android:background="@android:color/transparent"
+                android:scaleType="fitCenter"
+                android:src="@drawable/btn_play" />
+
+            <ImageButton
+                android:id="@+id/btn_action_feed"
+                android:contentDescription="feed 비디오 재생"
+                android:layout_width="0dp"
+                android:layout_height="80dp"
+                android:layout_weight="1"
+                android:layout_margin="4dp"
+                android:background="@android:color/transparent"
+                android:scaleType="fitCenter"
+                android:src="@drawable/btn_feed" />
+
+            <ImageButton
+                android:id="@+id/btn_action_wash"
+                android:contentDescription="wash 비디오 재생"
+                android:layout_width="0dp"
+                android:layout_height="80dp"
+                android:layout_weight="1"
+                android:layout_margin="4dp"
+                android:background="@android:color/transparent"
+                android:scaleType="fitCenter"
+                android:src="@drawable/btn_wash" />
+
         </LinearLayout>
-
-    </LinearLayout>
-
 </androidx.constraintlayout.widget.ConstraintLayout>
