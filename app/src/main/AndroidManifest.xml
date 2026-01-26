@@ -11,7 +11,16 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"/>
 
+<!--    petInfoActivity에서 갤러리 접근 -->
+    <!-- Android 13+ (API 33+) -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!-- Android 12 이하 (API 32 이하) - 하위 호환성 -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
     <application
+        android:name=".PetterdaysApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -21,7 +30,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Guru2"
         android:usesCleartextTraffic="true">
-
         <activity
             android:name=".PetInfoActivity"
             android:exported="false" />
@@ -30,16 +38,22 @@
             android:name=".StartActivity"
             android:exported="true"
             android:launchMode="singleTask">
+            <!-- 1. 앱 런처 아이콘 (메인 진입점) -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
+            <!-- 2. 이메일 인증 링크용 딥링크 -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="app" android:host="confirm-signup" />
+              
+                <!-- Supabase 이메일 인증 후 리다이렉트 -->
+                <data
+                    android:scheme="app"
+                    android:host="confirm-signup"/>
+                <!-- 실제 URL: app://confirm-signup -->
             </intent-filter>
         </activity>
 
