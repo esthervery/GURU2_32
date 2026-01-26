@@ -18,6 +18,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.android.guru2.data.SupabaseClientProvider
 import com.android.guru2.network.RetrofitClient
+import com.bumptech.glide.Glide
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.TextInputEditText
 import io.github.jan.supabase.auth.auth
@@ -30,9 +31,10 @@ import retrofit2.converter.gson.GsonConverterFactory
 class PetInfoActivity : AppCompatActivity() {
 
     private var selectedImageUri: Uri? = null
-    private var selectedGender: Int? = null // 0: 여자아이, 1: 남자아이
+    private var selectedGender: Int? = null // 성별 정보 저장 (0: 여자아이, 1: 남자아이)
+    private var existingImageUrl: String? = null // 서버 공개 URL 저장 (반려동물 이미지)
 
-    // 이미지 선택 런처
+    // 이미지 선택 (+ 버튼 클릭 시)
     private val pickImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
             selectedImageUri = it
@@ -40,15 +42,15 @@ class PetInfoActivity : AppCompatActivity() {
         }
     }
 
-    // 권한 요청 런처
+    // 권한 요청
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
-            // 권한 허용됨 - 이미지 선택
+            // 권한 허용됨 -> 이미지 선택
             pickImage.launch("image/*")
         } else {
-            // 권한 거부됨
+            // 권한 거부됨 -> 안내 메세지 출력
             Toast.makeText(this, "갤러리 접근 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
         }
     }
@@ -65,12 +67,15 @@ class PetInfoActivity : AppCompatActivity() {
         val ivMale = findViewById<ImageView>(R.id.iv_male)
         val btnSubmit = findViewById<Button>(R.id.btn_submit)
 
+        // DB에 저장된 기존 정보가 있다면 불러오기
+        loadExistingPetInfo(etName, etAge, ivFemale, ivMale, ivProfile)
+
         // 사진 추가 버튼 클릭
         btnAddPhoto.setOnClickListener {
             checkAndRequestPermission()
         }
 
-        // 2. 성별 선택 토글 로직
+        // 성별 선택
         ivFemale.setOnClickListener {
             selectedGender = 0
             ivFemale.alpha = 1.0f // 선택 시 불투명
@@ -87,8 +92,9 @@ class PetInfoActivity : AppCompatActivity() {
             val name = etName.text.toString()
             val ageStr = etAge.text.toString()
 
-            // 정보가 하나라도 빠지면 넘어가지 않음
-            if (selectedImageUri == null || name.isEmpty() || ageStr.isEmpty() || selectedGender == null) {
+            // 정보가 하나라도 빠지면 넘어가지 않도록 설정
+            if ((selectedImageUri == null && existingImageUrl == null) ||
+                name.isEmpty() || ageStr.isEmpty() || selectedGender == null) {
                 Toast.makeText(this, "모든 정보를 입력해 주세요!", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
@@ -97,6 +103,56 @@ class PetInfoActivity : AppCompatActivity() {
             startPetRegistration(name, ageStr.toInt(), selectedGender!!)
         }
     }
+
+    // DB에서 기존 반려동물 정보 조회하여 UI에 세팅하는 함수
+    private fun loadExistingPetInfo(
+        etName: TextInputEditText,
+        etAge: TextInputEditText,
+        ivFemale: ImageView,
+        ivMale: ImageView,
+        ivProfile: ImageView
+    ) {
+        lifecycleScope.launch {
+            try {
+                // 1. 현재 사용자 ID 획득
+                val currentUser = SupabaseClientProvider.client.auth.currentUserOrNull()
+                val userId = currentUser?.id ?: return@launch
+
+                // 2. petInfo 테이블에서 해당 유저의 row 조회
+                val petData = SupabaseClientProvider.client.postgrest["petInfo"]
+                    .select {
+                        filter { eq("id", userId) }
+                    }.decodeSingleOrNull<PetInfo>()
+
+                // 3. 데이터가 존재하면 UI에 반영
+                petData?.let { data ->
+                    etName.setText(data.pet_name)
+                    etAge.setText(data.pet_age.toString())
+
+                    // 성별 세팅 (0: 여자, 1: 남자)
+                    selectedGender = data.is_male
+                    if (data.is_male == 0) {
+                        ivFemale.alpha = 1.0f
+                        ivMale.alpha = 0.5f
+                    } else {
+                        ivMale.alpha = 1.0f
+                        ivFemale.alpha = 0.5f
+                    }
+
+                    // 4. 이미지 로드
+                    existingImageUrl = data.pet_image
+                    Glide.with(this@PetInfoActivity)
+                        .load(data.pet_image)
+                        .circleCrop() // 원형 이미지 처리
+                        .into(ivProfile)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // 데이터가 없는 경우 -> 별도 에러 처리는 생략
+            }
+        }
+    }
+
 
     private fun checkAndRequestPermission() {
         when {
@@ -107,11 +163,11 @@ class PetInfoActivity : AppCompatActivity() {
                         this,
                         Manifest.permission.READ_MEDIA_IMAGES
                     ) == PackageManager.PERMISSION_GRANTED -> {
-                        // 권한 O: 이미지 선택
+                        // 권한 유: 이미지 선택
                         pickImage.launch("image/*")
                     }
                     shouldShowRequestPermissionRationale(Manifest.permission.READ_MEDIA_IMAGES) -> {
-                        // 이전에 권한 거부해도 다시 요청 가능
+                        // 이전에 권한 거부한 경우 -> 다시 요청 가능하도록
                         Toast.makeText(this, "사진을 선택하려면 갤러리 접근 권한이 필요합니다.", Toast.LENGTH_LONG).show()
                         requestPermissionLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES)
                     }
@@ -126,7 +182,7 @@ class PetInfoActivity : AppCompatActivity() {
                 // Android 10+ 는 Scoped Storage 사용 - 권한 불필요
                 pickImage.launch("image/*")
             }
-            // Android 9 이하 (API 28 이하): 호환 가능하도록
+            // Android 9 이하 (API 28 이하)
             else -> {
                 when {
                     ContextCompat.checkSelfPermission(
@@ -146,11 +202,21 @@ class PetInfoActivity : AppCompatActivity() {
     private fun startPetRegistration(name: String, age: Int, gender: Int) {
         lifecycleScope.launch {
             try {
-                // 1단계: 이미지 업로드 및 DB 저장
-                val imageUrl = uploadImageAndSaveToDB(name, age, gender)
+                // 1. 로딩 화면 표시
+                showLoadingOverlay()
 
-                // 2단계: 캐릭터 생성 서버 호출 -> 서버 생성 후 진행 예정
-                requestCharacterGeneration(imageUrl)
+                // 2. DB 업데이트 분기 처리
+                val finalImageUrl = if (selectedImageUri != null) {
+                    // 새 이미지를 선택했다면 -> 업로드 후 새 URL 획득
+                    uploadImageAndSaveToDB(name, age, gender)
+                } else {
+                    // 이미지를 바꾸지 않았다면 -> 기존 URL 사용 및 DB 정보만 업데이트
+                    updateOnlyPetInfo(name, age, gender, existingImageUrl!!)
+                    existingImageUrl!!
+                }
+
+                // 3. 캐릭터 생성 서버 호출
+                requestCharacterGeneration(finalImageUrl)
 
             } catch (e: Exception) {
                 hideLoadingOverlay()
@@ -163,30 +229,34 @@ class PetInfoActivity : AppCompatActivity() {
             }
         }
     }
+    private suspend fun updateOnlyPetInfo(name: String, age: Int, gender: Int, imageUrl: String) {
+        val currentUser = SupabaseClientProvider.client.auth.currentUserOrNull() ?: return
+        val petData = PetInfo(currentUser.id, name, age, gender, imageUrl)
 
-    // 1단계: 이미지 업로드 및 DB 저장
-    // return: 업로드된 이미지의 Public URL
+        // upsert를 통해 기존 정보를 업데이트
+        SupabaseClientProvider.client.postgrest["petInfo"].upsert(petData)
+    }
+
     private suspend fun uploadImageAndSaveToDB(name: String, age: Int, gender: Int): String {
         try {
-            // 현재 사용자 확인
+            // 1. 현재 사용자 확인
             val currentUser = SupabaseClientProvider.client.auth.currentUserOrNull()
                 ?: throw Exception("로그인 정보가 없습니다.")
             val userId = currentUser.id
 
-            // 이미지를 ByteArray로 읽기
+            // 2. 이미지를 ByteArray로 읽기
             val imageBytes = contentResolver.openInputStream(selectedImageUri!!)?.use { inputStream ->
                 inputStream.readBytes()
             } ?: throw Exception("이미지를 읽을 수 없습니다.")
 
-            // Storage에 업로드
+            // 3. Storage에 업로드
             val fileName = "$userId/${System.currentTimeMillis()}.jpg"
             val bucket = SupabaseClientProvider.client.storage.from("pet_images")
 
             bucket.upload(fileName, imageBytes)
             val publicUrl = bucket.publicUrl(fileName)
 
-            // DB에 펫 정보 저장
-            // 수정된 부분: insert 대신 upsert를 사용
+            // 4. DB에 펫 정보 저장 (덮어쓰기 가능하도록 upsert 사용)
             val petData = PetInfo(userId, name, age, gender, publicUrl)
             SupabaseClientProvider.client.postgrest["petInfo"].upsert(petData)
 
@@ -199,10 +269,9 @@ class PetInfoActivity : AppCompatActivity() {
         }
     }
 
-    // 2단계: 캐릭터 생성 서버 호출
     private suspend fun requestCharacterGeneration(imageUrl: String) {
-        // 로딩 화면 표시
-        showLoadingOverlay()
+//        // 서버 호출 -> 로딩 화면 표시
+//        showLoadingOverlay()
 
         try {
             val currentUser = SupabaseClientProvider.client.auth.currentUserOrNull()
@@ -211,16 +280,16 @@ class PetInfoActivity : AppCompatActivity() {
 
             val service = RetrofitClient.instance.create(CharacterApiService::class.java)
 
-            // 서버 호출
+            // 1. 서버 호출
             val response = service.requestCharacterGeneration(userId, imageUrl)
 
             if (response.isSuccessful) {
-                // 성공: MainActivity로 이동
+                // 서버 호출 및 이미지 반환 성공: MainActivity로 이동
                 hideLoadingOverlay()
                 Toast.makeText(this, "캐릭터 생성 요청이 완료되었습니다!", Toast.LENGTH_SHORT).show()
                 navigateToMainActivity()
             } else {
-                // HTTP 에러
+                // 서버 응답 오류 (호출은 O)
                 throw Exception("서버 응답 오류: ${response.code()} ${response.message()}")
             }
 
@@ -233,12 +302,10 @@ class PetInfoActivity : AppCompatActivity() {
                 Toast.LENGTH_LONG
             ).show()
             e.printStackTrace()
-
-            // 실패해도 MainActivity로 이동하려면 주석 해제 -> 이때는 MainActivity로 이동 후 기본 이미지 렌더링할 예정
-            // navigateToMainActivity()
         }
     }
 
+    // 메인 액티비티로 이동
     private fun navigateToMainActivity() {
         val intent = Intent(this, MainActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -246,14 +313,14 @@ class PetInfoActivity : AppCompatActivity() {
         finish()
     }
 
-    // 로딩 프래그먼트 표시 로직
+    // 로딩 프래그먼트 표시
     private fun showLoadingOverlay() {
         supportFragmentManager.beginTransaction()
             .replace(R.id.loading_container, LoadingFragment())
             .commit()
     }
 
-    // [추가] 실패 시 로딩 프래그먼트 제거 로직
+    // 서버 호출 실패 시 로딩 프래그먼트 제거
     private fun hideLoadingOverlay() {
         val fragment = supportFragmentManager.findFragmentById(R.id.loading_container)
         if (fragment != null) {

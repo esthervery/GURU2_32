@@ -13,15 +13,14 @@ plugins {
     kotlin("plugin.serialization") version "2.1.0"
 }
 
-// 1. local.properties 파일을 명시적으로 불러옵니다.
+// local.properties 파일 불러오기
 val localProperties = Properties().apply {
     val localPropertiesFile = rootProject.file("local.properties")
     if (localPropertiesFile.exists()) {
         load(FileInputStream(localPropertiesFile))
     }
 }
-
-// 2. 파일에서 값을 추출합니다. (없을 경우 빈 문자열)
+// 파일에서 값을 추출 (없을 경우 빈 문자열)
 val supabaseUrl = localProperties.getProperty("SUPABASE_URL") ?: ""
 val supabaseAnonKey = localProperties.getProperty("SUPABASE_ANON_KEY") ?: ""
 
@@ -61,17 +60,13 @@ android {
         // supabase-kt 쪽은 Android 26 이상을 권장, 그대로 24 유지할 경우
         isCoreLibraryDesugaringEnabled = true
 
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        // java 11 -> 21 변경. kotlinOptions에서도 명시해야 함
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "21"
     }
-//    kotlin {
-//        compilerOptions {
-//            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
-//        }
-//    }
 }
 
 dependencies {
@@ -129,4 +124,7 @@ dependencies {
     // 뷰 모델 라이프사이클 관리용
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.0")
+
+    // 스플래시 화면을 제어하기 위한 라이브러리
+    implementation("androidx.core:core-splashscreen:1.1.0-rc01")
 }
