@@ -1,16 +1,22 @@
 package com.android.guru2
 
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
 class StartActivity : AppCompatActivity() {
+    // 사용자의 로그인 상태를 체크하기 위해 ViewModel 선언
+    private val authViewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -18,6 +24,41 @@ class StartActivity : AppCompatActivity() {
 
         val btnStartEmail = findViewById<Button>(R.id.btn_start_email)
         val tvLoginLink = findViewById<TextView>(R.id.tv_login_link)
+        val container = findViewById<FrameLayout>(R.id.fragment_container)
+
+        // 자동 로그인 로직: 세션 상태 관찰
+        lifecycleScope.launch {
+            authViewModel.loginEvent.collect { event ->
+                when (event) {
+                    is LoginNavEvent.ToMain -> {
+                        // 이미 로그인된 세션이 있다면 메인으로 바로 이동
+                        val intent = Intent(this@StartActivity, MainActivity::class.java)
+                        startActivity(intent)
+                        finish()
+                    }
+                    is LoginNavEvent.ToPetInfo -> {
+                        // 정보가 없으면 등록 화면으로 이동
+                        val intent = Intent(this@StartActivity, PetInfoActivity::class.java)
+                        startActivity(intent)
+                        finish()
+                    }
+                    else -> {
+                        // 세션이 없으면 현재 화면(StartActivity) 유지
+                    }
+                }
+            }
+        }
+
+        // 프래그먼트가 popBackStack() 되어 사라지면 이 리스너가 호출
+        supportFragmentManager.addOnBackStackChangedListener {
+            if (supportFragmentManager.backStackEntryCount == 0) {
+                // 1. 숨겼던 버튼들을 다시 보이게 함
+                btnStartEmail.visibility = View.VISIBLE
+                tvLoginLink.visibility = View.VISIBLE
+                // 2. 가림막으로 썼던 하얀 배경을 다시 투명하게 만듦
+                container.setBackgroundColor(Color.TRANSPARENT)
+            }
+        }
 
         // "이메일로 시작하기" 클릭 시 회원가입 프래그먼트로 이동
         btnStartEmail.setOnClickListener {
@@ -55,10 +96,17 @@ class StartActivity : AppCompatActivity() {
     }
 
     // 프래그먼트 교체를 위한 공통 함수
-    private fun replaceFragment(fragment: Fragment) {
+    fun replaceFragment(fragment: Fragment) {
+        val container = findViewById<FrameLayout>(R.id.fragment_container)
+        container.setBackgroundColor(android.graphics.Color.WHITE)
+        // 프래그먼트가 뜰 때 액티비티 바닥에 깔린 버튼들을 숨김
+        findViewById<Button>(R.id.btn_start_email).visibility = View.GONE
+        findViewById<TextView>(R.id.tv_login_link).visibility = View.GONE
+
         supportFragmentManager.beginTransaction()
+            .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
             .replace(R.id.fragment_container, fragment)
-            .addToBackStack(null) // 뒤로가기 버튼을 누르면 이전 화면으로 돌아옴
+            .addToBackStack(null)
             .commit()
     }
 }
