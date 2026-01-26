@@ -30,17 +30,35 @@ class LoadingFragment : Fragment(R.layout.fragment_loading) {
         val uri = Uri.parse(videoPath)
 
         videoView?.setVideoURI(uri)
-
         // 3. 비디오 준비 완료 시 재생 (무한 반복, 소리 없음)
+//        videoView?.setOnPreparedListener { mediaPlayer ->
+//            mediaPlayer.isLooping = true
+//            mediaPlayer.setVolume(0f, 0f) // 무음 설정
+//
+//            // 영상 비율에 맞춰 꽉 채우기 (Scale 조절)
+//            val videoRatio = mediaPlayer.videoWidth / mediaPlayer.videoHeight.toFloat()
+//            val screenRatio = videoView!!.width / videoView!!.height.toFloat()
+//            val scale = videoRatio / screenRatio
+//            if (scale >= 1f) videoView!!.scaleX = scale else videoView!!.scaleY = 1f / scale
+//
+//            videoView?.start()
+//        }
         videoView?.setOnPreparedListener { mediaPlayer ->
             mediaPlayer.isLooping = true
-            mediaPlayer.setVolume(0f, 0f) // 무음 설정
+            mediaPlayer.setVolume(0f, 0f)
 
-            // 영상 비율에 맞춰 꽉 채우기 (Scale 조절)
-            val videoRatio = mediaPlayer.videoWidth / mediaPlayer.videoHeight.toFloat()
-            val screenRatio = videoView!!.width / videoView!!.height.toFloat()
-            val scale = videoRatio / screenRatio
-            if (scale >= 1f) videoView!!.scaleX = scale else videoView!!.scaleY = 1f / scale
+            // 영상의 원래 비율을 유지하며 화면을 꽉 채우는 로직 (Center Crop 방식)
+            val videoWidth = mediaPlayer.videoWidth.toFloat()
+            val videoHeight = mediaPlayer.videoHeight.toFloat()
+            val viewWidth = videoView!!.width.toFloat()
+            val viewHeight = videoView!!.height.toFloat()
+
+            val xScale = viewWidth / videoWidth
+            val yScale = viewHeight / videoHeight
+            val scale = Math.max(xScale, yScale)
+
+            videoView!!.scaleX = scale / xScale
+            videoView!!.scaleY = scale / yScale
 
             videoView?.start()
         }

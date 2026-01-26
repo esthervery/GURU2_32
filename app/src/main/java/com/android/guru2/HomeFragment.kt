@@ -94,6 +94,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun playAnimation(character: ImageView, animationView: ImageView, drawableRes: Int, duration: Long) {
+        Glide.with(this).clear(animationView)
         // 강아지 캐릭터는 유지
         character.visibility = View.VISIBLE
         animationView.visibility = View.VISIBLE
@@ -110,9 +111,18 @@ class HomeFragment : Fragment() {
                 ): Boolean {
                     // 애니메이션(WebP)이면 재생 시작
                     if (resource is Animatable) {
-                        resource.start()
+                        if (resource is GifDrawable) {
+                            resource.stop() // 정지
+                            resource.setLoopCount(1) // 1회 재생 설정
+                            resource.startFromFirstFrame() // 첫 프레임부터 재생 강제
+                        } else {
+                            // 일반 Animatable(WebP 등)일 경우 정지 후 다시 시작
+                            resource.stop()
+                            resource.start()
+                        }
 
                         // 실제 애니메이션 길이만큼 기다렸다가 뷰 숨기기
+                        animationView.removeCallbacks(null) // 이전 예약된 GONE 제거
                         animationView.postDelayed({
                             animationView.visibility = View.GONE
                         }, duration)
