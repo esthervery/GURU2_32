@@ -83,49 +83,6 @@ fun CalendarScreen(
                 )
             )
         },
-        bottomBar = {
-            NavigationBar(
-                containerColor = Color.White,
-                modifier = Modifier.height(70.dp)
-            ) {
-                NavigationBarItem(
-                    selected = true,
-                    onClick = { },
-                    icon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_calendar),
-                            contentDescription = "캘린더",
-                            tint = Color(0xFFF0724A),
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = onNavigateToHome,
-                    icon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_home),
-                            contentDescription = "홈",
-                            tint = Color.Gray,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = onNavigateToCommunity,
-                    icon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_community),
-                            contentDescription = "커뮤니티",
-                            tint = Color.Gray,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                )
-            }
-        },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddMenu = !showAddMenu },
