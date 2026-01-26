@@ -19,7 +19,7 @@ val supabaseAnonKey = localProperties.getProperty("SUPABASE_ANON_KEY") ?: ""
 
 android {
     namespace = "com.android.guru2"
-    compileSdk = 34
+    compileSdk = 36
     
     // 서연님 코드 반영 (buildFeatures, packaging)
     buildFeatures {
@@ -36,7 +36,7 @@ android {
     defaultConfig {
         applicationId = "com.android.guru2"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
