@@ -1,35 +1,98 @@
 package com.android.guru2
 
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
 class StartActivity : AppCompatActivity() {
+    // 사용자의 로그인 상태를 체크하기 위해 ViewModel 선언
+    private val authViewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // 검은 화면 방지: 레이아웃을 그리기 전 윈도우 배경을 흰색으로 선점
+        window.setBackgroundDrawableResource(android.R.color.white)
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_start)
 
         val btnStartEmail = findViewById<Button>(R.id.btn_start_email)
         val tvLoginLink = findViewById<TextView>(R.id.tv_login_link)
+        val container = findViewById<FrameLayout>(R.id.fragment_container)
 
-        // "이메일로 시작하기" 클릭 시 회원가입 프래그먼트로 이동
-        btnStartEmail.setOnClickListener {
-            replaceFragment(SignUpFragment())
+        // 인증 상태 관찰 (AuthViewModel의 null/true/false 상태 대응)
+        lifecycleScope.launch {
+            authViewModel.isAuthenticated.collect { authenticated ->
+                when (authenticated) {
+                    true -> {
+                        // 로그인됨: 다음 화면으로 넘어갈 것이므로 버튼을 숨김
+                        btnStartEmail.visibility = View.GONE
+                        tvLoginLink.visibility = View.GONE
+                    }
+                    false -> {
+                        // 로그인 안 됨: 사용자가 직접 로그인할 수 있게 버튼을 표시
+                        btnStartEmail.visibility = View.VISIBLE
+                        tvLoginLink.visibility = View.VISIBLE
+                    }
+                    null -> {
+                        // 서버 확인 중: 버튼이 나타났다 사라지는 깜빡임을 막기 위해 숨김 유지
+                        btnStartEmail.visibility = View.GONE
+                        tvLoginLink.visibility = View.GONE
+                    }
+                }
+            }
         }
 
-        // "로그인" 클릭 시 로그인 프래그먼트로 이동
-        tvLoginLink.setOnClickListener {
-            replaceFragment(LoginFragment())
+        // 화면 전환 이벤트 관찰 (애니메이션 제거로 검은 잔상 차단)
+        lifecycleScope.launch {
+            authViewModel.loginEvent.collect { event ->
+                when (event) {
+                    is LoginNavEvent.ToMain -> navigateWithNoAnim(MainActivity::class.java)
+                    is LoginNavEvent.ToPetInfo -> navigateWithNoAnim(PetInfoActivity::class.java)
+                    is LoginNavEvent.Error -> {
+                        // 에러 시 다시 버튼을 보여주어 재시도 가능하게 함
+                        btnStartEmail.visibility = View.VISIBLE
+                        tvLoginLink.visibility = View.VISIBLE
+                    }
+                }
+            }
         }
 
+        // 백스택 리스너: 프래그먼트가 닫힐 때 액티비티 UI를 완벽히 복구
+        supportFragmentManager.addOnBackStackChangedListener {
+            if (supportFragmentManager.backStackEntryCount == 0) {
+                // 버튼 다시 보이기
+                btnStartEmail.visibility = View.VISIBLE
+                tvLoginLink.visibility = View.VISIBLE
+                // 가림막이었던 컨테이너를 투명하게 하고 아예 치워버림 (클릭 방해 금지)
+                container.setBackgroundColor(Color.TRANSPARENT)
+                container.visibility = View.GONE
+            }
+        }
+
+        btnStartEmail.setOnClickListener { replaceFragment(SignUpFragment()) }
+        tvLoginLink.setOnClickListener { replaceFragment(LoginFragment()) }
+
+        // 최초 실행 시 딥링크 확인
         intent?.let { handleSupabaseDeeplink(it) }
+    }
+
+    // 화면 전환 시 시스템 애니메이션을 제거하여 검은 틈을 막는 전용 함수
+    private fun <T> navigateWithNoAnim(cls: Class<T>) {
+        val intent = Intent(this, cls)
+        startActivity(intent)
+        // 액티비티 전환 애니메이션 제거
+        overridePendingTransition(0, 0)
+        finish()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -38,15 +101,15 @@ class StartActivity : AppCompatActivity() {
         handleSupabaseDeeplink(intent)
     }
 
+    // 딥링크 처리 로직
     private fun handleSupabaseDeeplink(intent: Intent) {
         val data: Uri? = intent.data
         if (data != null && data.scheme == "app" && data.host == "confirm-signup") {
-            // Supabase SDK가 딥링크를 처리하도록 전달
-            // 이 과정이 성공하면 AuthViewModel의 sessionStatus가 Authenticated로 변합니다
+            // Supabase SDK가 딥링크를 감시하여 자동으로 세션을 업데이트
+            // 필요 시 여기서 추가적인 확인 로직을 넣을 수 있음
             lifecycleScope.launch {
                 try {
-                    // supabase-kt의 자동 딥링크 처리 로직 (버전에 따라 상이할 수 있음)
-                    // 별도의 처리 없이도 SDK가 intent를 감시하지만, 명시적으로 확인이 필요한 경우 사용
+                    // SDK 버전 및 설정에 따라 자동 처리됨
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -55,10 +118,19 @@ class StartActivity : AppCompatActivity() {
     }
 
     // 프래그먼트 교체를 위한 공통 함수
-    private fun replaceFragment(fragment: Fragment) {
+    fun replaceFragment(fragment: Fragment) {
+        val container = findViewById<FrameLayout>(R.id.fragment_container)
+        container.visibility = View.VISIBLE
+        container.setBackgroundColor(Color.WHITE)
+
+        // 프래그먼트가 뜰 때 액티비티 바닥에 깔린 버튼들을 숨김
+        findViewById<Button>(R.id.btn_start_email).visibility = View.GONE
+        findViewById<TextView>(R.id.tv_login_link).visibility = View.GONE
+
         supportFragmentManager.beginTransaction()
+            .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
             .replace(R.id.fragment_container, fragment)
-            .addToBackStack(null) // 뒤로가기 버튼을 누르면 이전 화면으로 돌아옴
+            .addToBackStack(null)
             .commit()
     }
 }

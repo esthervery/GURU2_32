@@ -1,43 +1,34 @@
 package com.android.guru2
 
-import android.graphics.Color
-import android.graphics.SurfaceTexture
 import android.graphics.drawable.Animatable
-import android.media.MediaPlayer
-import android.net.Uri
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.VideoView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.lifecycleScope
-import com.android.guru2.data.SupabaseClientProvider
 import com.bumptech.glide.Glide
-import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.postgrest.postgrest
-import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
-import android.graphics.drawable.Drawable
 import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
-import com.bumptech.glide.load.resource.gif.GifDrawable
 
 class HomeFragment : Fragment() {
     private val viewModel: MainViewModel by activityViewModels()
+
+    // ✅ 연타 방지 및 상태 관리 변수
+    private var isAnimating = false
+    private var hideRunnable: Runnable? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // fragment_home.xml 레이아웃 인플레이트
         return inflater.inflate(R.layout.fragment_home, container, false)
     }
 
@@ -46,13 +37,14 @@ class HomeFragment : Fragment() {
 
         val ivCharacter = view.findViewById<ImageView>(R.id.iv_main_character)
         val ivAnimation = view.findViewById<ImageView>(R.id.iv_pet_animation)
+        val ivBubble = view.findViewById<ImageView>(R.id.iv_speech_bubble)
         val btnRainbow = view.findViewById<ImageButton>(R.id.btn_rainbow)
 
         val btnPlay = view.findViewById<ImageButton>(R.id.btn_action_play)
         val btnFeed = view.findViewById<ImageButton>(R.id.btn_action_feed)
         val btnWash = view.findViewById<ImageButton>(R.id.btn_action_wash)
 
-        // 캐릭터 데이터 관찰
+        // 캐릭터 데이터 로드 및 관찰
         viewModel.characterUrl.observe(viewLifecycleOwner) { url ->
             if (!url.isNullOrEmpty()) {
                 Glide.with(this).load(url).into(ivCharacter)
@@ -60,21 +52,86 @@ class HomeFragment : Fragment() {
         }
         viewModel.loadCharacter()
 
-        // 무지개 버튼 클릭 리스너
         btnRainbow.setOnClickListener { showRainbowDialog() }
 
-        // 재생 버튼 클릭 시 (WebP 애니메이션 실행)
+        // ✅ 각 버튼 클릭 시: 전용 애니메이션과 전용 말풍선 이미지 지정
         btnPlay.setOnClickListener {
-            playAnimation(ivCharacter, ivAnimation, R.drawable.ball_noblur, 2500L)
+            startInteraction(ivAnimation, ivBubble, R.drawable.ball_animate, R.drawable.bubble_play_img, 2500L)
         }
 
         btnFeed.setOnClickListener {
-            // R.drawable.feed_animation 등으로 변경해서 쓰시면 됩니다.
-            playAnimation(ivCharacter, ivAnimation, R.drawable.meal_animate, 2500L)
+            startInteraction(ivAnimation, ivBubble, R.drawable.meal_animate, R.drawable.bubble_feed_img, 2500L)
         }
 
         btnWash.setOnClickListener {
-            playAnimation(ivCharacter, ivAnimation, R.drawable.hand_animate, 2500L)
+            startInteraction(ivAnimation, ivBubble, R.drawable.hand_animate, R.drawable.bubble_wash_img, 2500L)
+        }
+    }
+
+    // ✅ 연타 방지 로직이 포함된 인터랙션 실행 함수
+    private fun startInteraction(animView: ImageView, bubbleView: ImageView, animRes: Int, bubbleRes: Int, duration: Long) {
+        if (isAnimating) return // 이미 진행 중이면 클릭 무시
+        isAnimating = true
+        setButtonsEnabled(false) // 버튼 잠금
+
+        // 이전 예약된 작업 취소 및 Glide 초기화
+        hideRunnable?.let { animView.removeCallbacks(it) }
+        Glide.with(this).clear(animView)
+        animView.visibility = View.VISIBLE
+
+        Glide.with(this)
+            .asDrawable()
+            .load(animRes)
+            .diskCacheStrategy(DiskCacheStrategy.NONE)
+            .skipMemoryCache(true)
+            .listener(object : RequestListener<Drawable> {
+                override fun onResourceReady(resource: Drawable, model: Any, target: Target<Drawable>?, dataSource: DataSource, isFirstResource: Boolean): Boolean {
+                    if (resource is Animatable) {
+                        resource.stop()
+                        resource.start() // 첫 프레임부터 재생
+
+                        hideRunnable = Runnable {
+                            animView.visibility = View.GONE
+                            // ✅ 애니메이션 종료 후 말풍선 페이드 효과 시작
+                            showSpeechBubbleEffect(bubbleView, bubbleRes)
+                        }
+                        animView.postDelayed(hideRunnable!!, duration)
+                    }
+                    return false
+                }
+                override fun onLoadFailed(e: GlideException?, model: Any?, target: Target<Drawable>, isFirstResource: Boolean): Boolean {
+                    isAnimating = false
+                    setButtonsEnabled(true)
+                    return false
+                }
+            })
+            .into(animView)
+    }
+
+    // ✅ 말풍선 페이드 인(0.3초) -> 유지(1초) -> 페이드 아웃(0.3초)
+    private fun showSpeechBubbleEffect(bubbleView: ImageView, imageRes: Int) {
+        bubbleView.setImageResource(imageRes)
+        bubbleView.visibility = View.VISIBLE
+
+        // 1. 페이드 인
+        bubbleView.animate().alpha(1f).setDuration(300).withEndAction {
+            // 2. 1초 대기 후 페이드 아웃
+            bubbleView.postDelayed({
+                bubbleView.animate().alpha(0f).setDuration(300).withEndAction {
+                    bubbleView.visibility = View.GONE
+                    // ✅ 모든 과정 완료 후 연타 방지 해제
+                    isAnimating = false
+                    setButtonsEnabled(true)
+                }.start()
+            }, 1000)
+        }.start()
+    }
+
+    private fun setButtonsEnabled(enabled: Boolean) {
+        view?.let {
+            it.findViewById<ImageButton>(R.id.btn_action_play).isEnabled = enabled
+            it.findViewById<ImageButton>(R.id.btn_action_feed).isEnabled = enabled
+            it.findViewById<ImageButton>(R.id.btn_action_wash).isEnabled = enabled
         }
     }
 
@@ -82,44 +139,12 @@ class HomeFragment : Fragment() {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_rainbow_btn, null)
         val alertDialog = android.app.AlertDialog.Builder(requireContext()).setView(dialogView).create()
         alertDialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-
         dialogView.findViewById<Button>(R.id.btn_alert_cancel).setOnClickListener { alertDialog.dismiss() }
         dialogView.findViewById<Button>(R.id.btn_alert_confirm).setOnClickListener {
-            // 뷰모델에 '강아지가 무지개 다리를 건넜음' 확정 기록
             viewModel.isStarMode.value = true
             (activity as? MainActivity)?.replaceFragment(StarFragment())
             alertDialog.dismiss()
         }
         alertDialog.show()
-    }
-
-    private fun playAnimation(character: ImageView, animationView: ImageView, drawableRes: Int, duration: Long) {
-        // 강아지 캐릭터는 유지
-        character.visibility = View.VISIBLE
-        animationView.visibility = View.VISIBLE
-
-        Glide.with(this)
-            .load(drawableRes)
-            .listener(object : RequestListener<Drawable> {
-                override fun onLoadFailed(
-                    e: GlideException?, model: Any?, target: Target<Drawable>, isFirstResource: Boolean
-                ): Boolean = false
-
-                override fun onResourceReady(
-                    resource: Drawable, model: Any, target: Target<Drawable>?, dataSource: DataSource, isFirstResource: Boolean
-                ): Boolean {
-                    // 애니메이션(WebP)이면 재생 시작
-                    if (resource is Animatable) {
-                        resource.start()
-
-                        // 실제 애니메이션 길이만큼 기다렸다가 뷰 숨기기
-                        animationView.postDelayed({
-                            animationView.visibility = View.GONE
-                        }, duration)
-                    }
-                    return false
-                }
-            })
-            .into(animationView)
     }
 }

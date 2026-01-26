@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.android.guru2.data.SupabaseClientProvider
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
-import io.github.jan.supabase.auth.status.SessionStatus // 명시적 임포트
+import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,26 +21,59 @@ sealed class LoginNavEvent {
 
 class AuthViewModel : ViewModel() {
 
-    // 회원가입 상태를 관리 (null: 대기, true: 성공, false: 실패)
     private val _signUpSuccess = MutableStateFlow<Boolean?>(null)
     val signUpSuccess = _signUpSuccess.asStateFlow()
 
-    // 사용자 인증 여부 상태 추가
-    private val _isAuthenticated = MutableStateFlow(false)
+    // 이메일 인증 상태를 Boolean?로 변경 (null: 확인 중, true: 로그인됨, false: 로그인 안 됨)
+    private val _isAuthenticated = MutableStateFlow<Boolean?>(null)
     val isAuthenticated = _isAuthenticated.asStateFlow()
 
+    private val _loginEvent = MutableSharedFlow<LoginNavEvent>()
+    val loginEvent = _loginEvent.asSharedFlow()
+
     init {
+        // 앱 시작 시 세션 상태를 관찰하여 상태를 업데이트
         viewModelScope.launch {
-            // status의 타입을 명시적으로 확인하여 컴파일러 오류 방지
-            SupabaseClientProvider.client.auth.sessionStatus.collect { status: SessionStatus ->
+            SupabaseClientProvider.client.auth.sessionStatus.collect { status ->
                 when (status) {
                     is SessionStatus.Authenticated -> {
                         _isAuthenticated.value = true
+                        // 자동 로그인 성공 시에도 캐릭터 정보를 확인하여 화면 전환 시도
+                        checkUserCharacterAndNavigate()
                     }
-                    else -> {
+                    is SessionStatus.NotAuthenticated -> {
                         _isAuthenticated.value = false
                     }
+                    else -> {
+                        _isAuthenticated.value = null
+                    }
                 }
+            }
+        }
+    }
+
+    //캐릭터 정보 확인 로직을 별도 함수로 분리하여 자동/수동 로그인 모두에서 사용합니다.
+    private fun checkUserCharacterAndNavigate() {
+        viewModelScope.launch {
+            try {
+                val userId = SupabaseClientProvider.client.auth.currentUserOrNull()?.id ?: return@launch
+
+                // characterInfo 테이블에서 해당 유저의 정보가 있는지 확인
+                val response = SupabaseClientProvider.client.postgrest["characterInfo"]
+                    .select {
+                        filter { eq("id", userId) }
+                    }
+
+                val hasCharacterInfo = response.data != "[]"
+
+                if (hasCharacterInfo) {
+                    _loginEvent.emit(LoginNavEvent.ToMain)
+                } else {
+                    _loginEvent.emit(LoginNavEvent.ToPetInfo)
+                }
+            } catch (e: Exception) {
+                _loginEvent.emit(LoginNavEvent.Error("사용자 정보 확인 중 오류가 발생했습니다."))
+                e.printStackTrace()
             }
         }
     }
@@ -60,10 +93,7 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    private val _loginEvent = MutableSharedFlow<LoginNavEvent>()
-    val loginEvent = _loginEvent.asSharedFlow()
-
-    // 로그인 함수
+    // 로그인 함수 수정: 로그인 성공 후 공통 체크 함수를 호출
     fun signIn(emailInput: String, passwordInput: String) {
         viewModelScope.launch {
             try {
@@ -71,28 +101,9 @@ class AuthViewModel : ViewModel() {
                     email = emailInput
                     password = passwordInput
                 }
-                // 성공 시 처리
-                val userId = SupabaseClientProvider.client.auth.currentUserOrNull()?.id
-                    ?: throw Exception("사용자 정보를 찾을 수 없습니다.")
-
-                // 3. petInfo 테이블에 해당 ID의 데이터가 있는지 확인
-                val hasCharacterInfo = SupabaseClientProvider.client.postgrest["characterInfo"]
-                    .select {
-                        filter {
-                            eq("id", userId) // auth.users.id와 연결된 id 컬럼 검사
-                        }
-                    }.data != "[]" // 데이터가 비어있지 않으면 캐릭터 정보가 존재하는 것
-
-                // 4. 결과에 따라 이벤트 전송
-                if (hasCharacterInfo) {
-                    // 캐릭터가 이미 생성되어 있다면 메인 화면으로
-                    _loginEvent.emit(LoginNavEvent.ToMain)
-                } else {
-                    // 캐릭터 정보가 없다면 반려동물 정보 등록 화면으로
-                    _loginEvent.emit(LoginNavEvent.ToPetInfo)
-                }
+                // 성공 시 캐릭터 정보 확인 프로세스로 진입
+                checkUserCharacterAndNavigate()
             } catch (e: Exception) {
-                // 에러 발생 시 처리 로직
                 _loginEvent.emit(LoginNavEvent.Error(e.localizedMessage ?: "로그인에 실패했습니다."))
                 e.printStackTrace()
             }
