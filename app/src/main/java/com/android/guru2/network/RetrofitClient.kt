@@ -9,8 +9,10 @@ object RetrofitClient {
     private const val BASE_URL = "http://10.0.2.2:8000/"
 
     private val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(2, TimeUnit.MINUTES) // 연결 타임아웃 60초
-        .readTimeout(2, TimeUnit.MINUTES)    // 읽기 타임아웃 60초 (AI 생성 대기용)
+        // 연결 타임아웃 10초
+        .connectTimeout(10, TimeUnit.SECONDS)
+        // 읽기 타임아웃 2분 (AI 생성 대기)
+        .readTimeout(2, TimeUnit.MINUTES)
         .writeTimeout(1, TimeUnit.MINUTES)
         .build()
 

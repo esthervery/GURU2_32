@@ -61,11 +61,11 @@ android {
         // supabase-kt 쪽은 Android 26 이상을 권장, 그대로 24 유지할 경우
         isCoreLibraryDesugaringEnabled = true
 
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "21"
     }
 //    kotlin {
 //        compilerOptions {
@@ -129,4 +129,7 @@ dependencies {
     // 뷰 모델 라이프사이클 관리용
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.0")
+
+    // 스플래시 화면을 제어하기 위한 라이브러리
+    implementation("androidx.core:core-splashscreen:1.1.0-rc01")
 }
