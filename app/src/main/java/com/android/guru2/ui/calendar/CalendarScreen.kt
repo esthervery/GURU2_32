@@ -67,14 +67,6 @@ fun CalendarScreen(
                         )
                     }
                 },
-                navigationIcon = {
-                    IconButton(onClick = { /* 뒤로가기 */ }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_back),
-                            contentDescription = "뒤로가기"
-                        )
-                    }
-                },
                 actions = {
                     Spacer(modifier = Modifier.width(48.dp))
                 },
