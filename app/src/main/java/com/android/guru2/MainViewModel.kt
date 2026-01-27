@@ -23,7 +23,8 @@ class MainViewModel : ViewModel() {
     }
 
     fun loadCharacter() {
-        if (_characterUrl.value != null) return // 이미 데이터가 있으면 재호출 안 함
+        // 이미 데이터가 있으면 재호출 안 하도록
+        if (_characterUrl.value != null) return
 
         viewModelScope.launch {
             try {

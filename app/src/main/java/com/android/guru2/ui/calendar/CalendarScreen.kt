@@ -46,17 +46,17 @@ fun CalendarScreen(
 
     var showAddMenu by remember { mutableStateOf(false) }
 
-    // ✅ “추가” 다이얼로그용
+    //  “추가” 다이얼로그용
     var showDiaryDialog by remember { mutableStateOf(false) }
     var showHealthDialog by remember { mutableStateOf(false) }
     var showScheduleDialog by remember { mutableStateOf(false) }
 
-    // ✅ 상세보기 다이얼로그용
+    //  상세보기 다이얼로그용
     var showDiaryDetail by remember { mutableStateOf<DiaryEntry?>(null) }
     var showHealthDetail by remember { mutableStateOf<HealthRecord?>(null) }
     var showScheduleDetail by remember { mutableStateOf<ImportantSchedule?>(null) }
 
-    // ✅ “수정”은 따로 다이얼로그를 만들지 않고, 기존 다이얼로그를 prefill로 재사용
+    //  “수정”은 따로 다이얼로그를 만들지 않고, 기존 다이얼로그를 prefill로 재사용
     var editingDiary by remember { mutableStateOf<DiaryEntry?>(null) }
     var editingHealth by remember { mutableStateOf<HealthRecord?>(null) }
     var editingSchedule by remember { mutableStateOf<ImportantSchedule?>(null) }
@@ -178,9 +178,7 @@ fun CalendarScreen(
         }
     }
 
-    // =========================
-    // ✅ 추가(빈 값) 다이얼로그들
-    // =========================
+    //  추가(빈 값) 다이얼로그들
     if (showDiaryDialog) {
         DiaryDialog(
             onDismiss = { showDiaryDialog = false },
@@ -238,9 +236,7 @@ fun CalendarScreen(
         )
     }
 
-    // =========================
-    // ✅ 수정(prefill) 다이얼로그들
-    // =========================
+    //  수정(prefill) 다이얼로그들
     editingDiary?.let { diary ->
         DiaryDialog(
             onDismiss = { editingDiary = null },
@@ -284,7 +280,6 @@ fun CalendarScreen(
         ScheduleDialog(
             onDismiss = { editingSchedule = null },
             onSave = { title, location, notes ->
-                // ImportantSchedule이 location/notes nullable이면 여기서 trim 후 빈 문자열을 null로 바꿔서 넣어도 됨
                 viewModel.updateSchedule(
                     schedule = schedule.copy(
                         title = title,
@@ -302,9 +297,7 @@ fun CalendarScreen(
         )
     }
 
-    // =========================
     // 상세 팝업들 (삭제/수정/닫기)
-    // =========================
     showDiaryDetail?.let { diary ->
         var showDeleteConfirm by remember { mutableStateOf(false) }
 
@@ -499,10 +492,7 @@ fun CalendarScreen(
     }
 }
 
-// =========================
 // 캘린더 UI 컴포저블들
-// =========================
-
 @Composable
 fun CalendarView(
     currentMonth: YearMonth,

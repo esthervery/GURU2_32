@@ -31,8 +31,12 @@ import retrofit2.converter.gson.GsonConverterFactory
 class PetInfoActivity : AppCompatActivity() {
 
     private var selectedImageUri: Uri? = null
-    private var selectedGender: Int? = null // 성별 정보 저장 (0: 여자아이, 1: 남자아이)
-    private var existingImageUrl: String? = null // 서버 공개 URL 저장 (반려동물 이미지)
+
+    // 성별 정보 저장 (0: 여자아이, 1: 남자아이)
+    private var selectedGender: Int? = null
+
+    // 서버 공개 URL 저장 (반려동물 이미지)
+    private var existingImageUrl: String? = null
 
     // 이미지 선택 (+ 버튼 클릭 시)
     private val pickImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -78,8 +82,10 @@ class PetInfoActivity : AppCompatActivity() {
         // 성별 선택
         ivFemale.setOnClickListener {
             selectedGender = 0
-            ivFemale.alpha = 1.0f // 선택 시 불투명
-            ivMale.alpha = 0.5f   // 미선택 시 반투명
+            // 선택 시 불투명
+            ivFemale.alpha = 1.0f
+            // 미선택 시 반투명
+            ivMale.alpha = 0.5f
         }
         ivMale.setOnClickListener {
             selectedGender = 1
@@ -114,17 +120,17 @@ class PetInfoActivity : AppCompatActivity() {
     ) {
         lifecycleScope.launch {
             try {
-                // 1. 현재 사용자 ID 획득
+                // 현재 사용자 ID 획득
                 val currentUser = SupabaseClientProvider.client.auth.currentUserOrNull()
                 val userId = currentUser?.id ?: return@launch
 
-                // 2. petInfo 테이블에서 해당 유저의 row 조회
+                // petInfo 테이블에서 해당 유저의 row 조회
                 val petData = SupabaseClientProvider.client.postgrest["petInfo"]
                     .select {
                         filter { eq("id", userId) }
                     }.decodeSingleOrNull<PetInfo>()
 
-                // 3. 데이터가 존재하면 UI에 반영
+                // 데이터가 존재하면 UI에 반영
                 petData?.let { data ->
                     etName.setText(data.pet_name)
                     etAge.setText(data.pet_age.toString())
@@ -139,11 +145,11 @@ class PetInfoActivity : AppCompatActivity() {
                         ivFemale.alpha = 0.5f
                     }
 
-                    // 4. 이미지 로드
+                    // 이미지 로드
                     existingImageUrl = data.pet_image
                     Glide.with(this@PetInfoActivity)
                         .load(data.pet_image)
-                        .circleCrop() // 원형 이미지 처리
+                        .circleCrop()
                         .into(ivProfile)
                 }
             } catch (e: Exception) {
@@ -163,7 +169,7 @@ class PetInfoActivity : AppCompatActivity() {
                         this,
                         Manifest.permission.READ_MEDIA_IMAGES
                     ) == PackageManager.PERMISSION_GRANTED -> {
-                        // 권한 유: 이미지 선택
+                        // 권한 O: 이미지 선택
                         pickImage.launch("image/*")
                     }
                     shouldShowRequestPermissionRationale(Manifest.permission.READ_MEDIA_IMAGES) -> {
@@ -202,10 +208,10 @@ class PetInfoActivity : AppCompatActivity() {
     private fun startPetRegistration(name: String, age: Int, gender: Int) {
         lifecycleScope.launch {
             try {
-                // 1. 로딩 화면 표시
+                // 로딩 화면 표시
                 showLoadingOverlay()
 
-                // 2. DB 업데이트 분기 처리
+                // DB 업데이트 분기 처리
                 val finalImageUrl = if (selectedImageUri != null) {
                     // 새 이미지를 선택했다면 -> 업로드 후 새 URL 획득
                     uploadImageAndSaveToDB(name, age, gender)
@@ -215,7 +221,7 @@ class PetInfoActivity : AppCompatActivity() {
                     existingImageUrl!!
                 }
 
-                // 3. 캐릭터 생성 서버 호출
+                // 캐릭터 생성 서버 호출
                 requestCharacterGeneration(finalImageUrl)
 
             } catch (e: Exception) {
@@ -239,24 +245,24 @@ class PetInfoActivity : AppCompatActivity() {
 
     private suspend fun uploadImageAndSaveToDB(name: String, age: Int, gender: Int): String {
         try {
-            // 1. 현재 사용자 확인
+            // 현재 사용자 확인
             val currentUser = SupabaseClientProvider.client.auth.currentUserOrNull()
                 ?: throw Exception("로그인 정보가 없습니다.")
             val userId = currentUser.id
 
-            // 2. 이미지를 ByteArray로 읽기
+            // 이미지를 ByteArray로 읽기
             val imageBytes = contentResolver.openInputStream(selectedImageUri!!)?.use { inputStream ->
                 inputStream.readBytes()
             } ?: throw Exception("이미지를 읽을 수 없습니다.")
 
-            // 3. Storage에 업로드
+            // Storage에 업로드
             val fileName = "$userId/${System.currentTimeMillis()}.jpg"
             val bucket = SupabaseClientProvider.client.storage.from("pet_images")
 
             bucket.upload(fileName, imageBytes)
             val publicUrl = bucket.publicUrl(fileName)
 
-            // 4. DB에 펫 정보 저장 (덮어쓰기 가능하도록 upsert 사용)
+            // DB에 펫 정보 저장 (덮어쓰기 가능하도록 upsert 사용)
             val petData = PetInfo(userId, name, age, gender, publicUrl)
             SupabaseClientProvider.client.postgrest["petInfo"].upsert(petData)
 
@@ -270,9 +276,6 @@ class PetInfoActivity : AppCompatActivity() {
     }
 
     private suspend fun requestCharacterGeneration(imageUrl: String) {
-//        // 서버 호출 -> 로딩 화면 표시
-//        showLoadingOverlay()
-
         try {
             val currentUser = SupabaseClientProvider.client.auth.currentUserOrNull()
                 ?: throw Exception("로그인 정보가 없습니다.")
@@ -280,7 +283,7 @@ class PetInfoActivity : AppCompatActivity() {
 
             val service = RetrofitClient.instance.create(CharacterApiService::class.java)
 
-            // 1. 서버 호출
+            // 서버 호출
             val response = service.requestCharacterGeneration(userId, imageUrl)
 
             if (response.isSuccessful) {

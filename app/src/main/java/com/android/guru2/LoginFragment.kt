@@ -32,15 +32,6 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
         btnBack.setOnClickListener {
             parentFragmentManager.popBackStack()
-//            if (fromSignUp) {
-//                // 회원가입에서 온 경우: Fragment 제거
-//                parentFragmentManager.beginTransaction()
-//                    .remove(this)
-//                    .commit()
-//            } else {
-//                // StartActivity에서 직접 온 경우: 백스택 pop
-//                parentFragmentManager.popBackStack()
-//            }
         }
 
         viewLifecycleOwner.lifecycleScope.launch {

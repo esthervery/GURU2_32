@@ -77,7 +77,7 @@ class SignUpFragment : Fragment(R.layout.fragment_sign_up) {
             // 먼저 백스택에서 SignUpFragment의 기록을 지움
             parentFragmentManager.popBackStack()
 
-            // LoginFragment 생성 시 "회원가입에서 왔다" 표시
+            // LoginFragment 생성 시 회원가입에서 왔다 표시
             val loginFragment = LoginFragment().apply {
                 arguments = Bundle().apply {
                     putBoolean("fromSignUp", true)
