@@ -20,7 +20,9 @@ sealed class LoginNavEvent {
 }
 
 class AuthViewModel : ViewModel() {
-
+    // 로딩 상태를 알리는 StateFlow
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
     private val _signUpSuccess = MutableStateFlow<Boolean?>(null)
     val signUpSuccess = _signUpSuccess.asStateFlow()
 
@@ -32,7 +34,7 @@ class AuthViewModel : ViewModel() {
     val loginEvent = _loginEvent.asSharedFlow()
 
     init {
-        // 앱 시작 시 세션 상태를 관찰하여 상태를 업데이트
+        // 앱 시작 시 세션 상태를 관찰하여 상태 업데이트
         viewModelScope.launch {
             SupabaseClientProvider.client.auth.sessionStatus.collect { status ->
                 when (status) {
@@ -79,7 +81,9 @@ class AuthViewModel : ViewModel() {
     }
 
     fun signUp(emailInput: String, passwordInput: String) {
+        if (_isLoading.value) return // 이미 로딩 중이면 즉시 종료
         viewModelScope.launch {
+            _isLoading.value = true // 로딩 시작
             try {
                 SupabaseClientProvider.client.auth.signUpWith(Email) {
                     email = emailInput
@@ -89,6 +93,9 @@ class AuthViewModel : ViewModel() {
             } catch (e: Exception) {
                 _signUpSuccess.value = false
                 e.printStackTrace()
+            } finally {
+                // 성공하든 실패하든 마지막엔 반드시 로딩을 해제
+                _isLoading.value = false
             }
         }
     }
