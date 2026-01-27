@@ -33,7 +33,7 @@ class SignUpFragment : Fragment(R.layout.fragment_sign_up) {
             parentFragmentManager.popBackStack()
         }
 
-        // 1. 회원가입 요청 성공 시 안내 팝업 띄우기
+        // 회원가입 요청 성공 시 안내 팝업 띄우기
         viewLifecycleOwner.lifecycleScope.launch {
             authViewModel.signUpSuccess.collectLatest { success ->
                 if (success == true) {
@@ -44,17 +44,13 @@ class SignUpFragment : Fragment(R.layout.fragment_sign_up) {
             }
         }
 
-        // 2. 이메일 인증 완료(Authenticated) 감지 시 화면 이동 -> login 화면으로 이동하도록 수정
-//        viewLifecycleOwner.lifecycleScope.launch {
-//            authViewModel.isAuthenticated.collect { authenticated ->
-//                if (authenticated) {
-//                    confirmDialog?.dismiss() // 다이얼로그 닫기
-//                    val intent = Intent(requireContext(), PetInfoActivity::class.java)
-//                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-//                    startActivity(intent)
-//                }
-//            }
-//        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            authViewModel.isLoading.collect { isLoading ->
+                // 로딩 중일 때는 버튼을 비활성화하고, 텍스트를 변경해 사용자에게 알림
+                signUpButton.isEnabled = !isLoading
+                signUpButton.text = if (isLoading) "처리 중..." else "회원가입"
+            }
+        }
 
         signUpButton.setOnClickListener {
             val email = emailEdit.text.toString()
