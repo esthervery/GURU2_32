@@ -97,10 +97,13 @@ class AuthViewModel : ViewModel() {
 
     fun signUp(emailInput: String, passwordInput: String) {
         if (_isLoading.value) return // 이미 로딩 중이면 즉시 종료
+
         viewModelScope.launch {
             _isLoading.value = true // 로딩 시작
             try {
-                SupabaseClientProvider.client.auth.signUpWith(Email) {
+                SupabaseClientProvider.client.auth.signUpWith(
+                    Email,
+                    "app://confirm-signup") {
                     email = emailInput
                     password = passwordInput
                 }
