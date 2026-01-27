@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import androidx.fragment.app.Fragment
@@ -20,7 +21,7 @@ import com.bumptech.glide.request.target.Target
 class StarFragment : Fragment() {
     private val viewModel: MainViewModel by activityViewModels()
 
-    // 연타 방지 및 타이머 관리 변수 추가
+    // 연타 방지 및 타이머 관리 변수
     private var isAnimating = false
     private var hideRunnable: Runnable? = null
 
@@ -42,6 +43,8 @@ class StarFragment : Fragment() {
         val btnFeed = view.findViewById<ImageButton>(R.id.btn_action_feed)
         val btnWash = view.findViewById<ImageButton>(R.id.btn_action_wash)
 
+        val btnHome = view.findViewById<ImageButton>(R.id.btn_home)
+
         // 캐릭터 데이터 관찰
         viewModel.characterUrl.observe(viewLifecycleOwner) { url ->
             if (!url.isNullOrEmpty()) {
@@ -49,6 +52,11 @@ class StarFragment : Fragment() {
             }
         }
         viewModel.loadCharacter()
+
+        // 홈 버튼 클릭 시 다이얼로그 표시
+        btnHome.setOnClickListener {
+            showHomeDialog()
+        }
 
         // 각 버튼별 전용 애니메이션과 전용 말풍선 이미지 설정
         btnPlay.setOnClickListener {
@@ -64,11 +72,30 @@ class StarFragment : Fragment() {
         }
     }
 
-    // 연타 방지가 포함된 애니메이션 실행 함수
+    // 홈 복귀 확인 다이얼로그 표시 함수
+    private fun showHomeDialog() {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_home_btn, null)
+        val alertDialog = android.app.AlertDialog.Builder(requireContext()).setView(dialogView).create()
+        alertDialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        dialogView.findViewById<Button>(R.id.btn_alert_cancel).setOnClickListener {
+            alertDialog.dismiss()
+        }
+
+        dialogView.findViewById<Button>(R.id.btn_alert_confirm).setOnClickListener {
+            // StarMode 해제 및 HomeFragment로 교체
+            viewModel.isStarMode.value = false
+            (activity as? MainActivity)?.replaceFragment(HomeFragment())
+            alertDialog.dismiss()
+        }
+        alertDialog.show()
+    }
+
+    // 애니메이션 실행 함수 (기존과 동일)
     private fun startStarInteraction(animView: ImageView, bubbleView: ImageView, animRes: Int, bubbleRes: Int) {
         if (isAnimating) return
         isAnimating = true
-        setButtonsEnabled(false) // 버튼 잠금
+        setButtonsEnabled(false)
 
         hideRunnable?.let { animView.removeCallbacks(it) }
         Glide.with(this).clear(animView)
@@ -83,14 +110,13 @@ class StarFragment : Fragment() {
                 override fun onResourceReady(resource: Drawable, model: Any, target: Target<Drawable>?, dataSource: DataSource, isFirstResource: Boolean): Boolean {
                     if (resource is Animatable) {
                         resource.stop()
-                        resource.start() // 첫 프레임부터 재생 강제
+                        resource.start()
 
                         hideRunnable = Runnable {
                             animView.visibility = View.GONE
-                            // ✅ 애니메이션 종료 후 말풍선 페이드 효과 실행
                             showSpeechBubble(bubbleView, bubbleRes)
                         }
-                        animView.postDelayed(hideRunnable!!, 2500L) // 애니메이션 재생 시간
+                        animView.postDelayed(hideRunnable!!, 2500L)
                     }
                     return false
                 }
@@ -103,19 +129,14 @@ class StarFragment : Fragment() {
             .into(animView)
     }
 
-    // 말풍선 페이드 인 -> 1초 유지 -> 페이드 아웃 로직
     private fun showSpeechBubble(bubbleView: ImageView, imageRes: Int) {
         bubbleView.setImageResource(imageRes)
         bubbleView.visibility = View.VISIBLE
 
-        // 페이드 인 (0.3초)
         bubbleView.animate().alpha(1f).setDuration(300).withEndAction {
-            // 1초 대기
             bubbleView.postDelayed({
-                // 페이드 아웃 (0.3초)
                 bubbleView.animate().alpha(0f).setDuration(300).withEndAction {
                     bubbleView.visibility = View.GONE
-                    // 모든 시퀀스가 끝나면 연타 방지 해제
                     isAnimating = false
                     setButtonsEnabled(true)
                 }.start()
