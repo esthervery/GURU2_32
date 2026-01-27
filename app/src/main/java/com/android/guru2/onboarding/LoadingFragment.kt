@@ -1,4 +1,4 @@
-package com.android.guru2
+package com.android.guru2.onboarding
 
 import android.net.Uri
 import android.os.Bundle
@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.VideoView
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
+import com.android.guru2.R
 
 class LoadingFragment : Fragment(R.layout.fragment_loading) {
 

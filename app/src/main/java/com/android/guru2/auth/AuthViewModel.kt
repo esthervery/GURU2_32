@@ -1,4 +1,4 @@
-package com.android.guru2
+package com.android.guru2.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

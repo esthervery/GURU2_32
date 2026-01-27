@@ -1,5 +1,6 @@
-package com.android.guru2
+package com.android.guru2.onboarding
 
+import android.R
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
@@ -12,6 +13,11 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.android.guru2.interaction.MainActivity
+import com.android.guru2.auth.AuthViewModel
+import com.android.guru2.auth.LoginFragment
+import com.android.guru2.auth.LoginNavEvent
+import com.android.guru2.auth.SignUpFragment
 import kotlinx.coroutines.launch
 
 class StartActivity : AppCompatActivity() {
@@ -20,14 +26,14 @@ class StartActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // 검은 화면 방지: 레이아웃을 그리기 전 윈도우 배경을 흰색으로 선점
-        window.setBackgroundDrawableResource(android.R.color.white)
+        window.setBackgroundDrawableResource(R.color.white)
 
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_start)
+        setContentView(com.android.guru2.R.layout.activity_start)
 
-        val btnStartEmail = findViewById<Button>(R.id.btn_start_email)
-        val tvLoginLink = findViewById<TextView>(R.id.tv_login_link)
-        val container = findViewById<FrameLayout>(R.id.fragment_container)
+        val btnStartEmail = findViewById<Button>(com.android.guru2.R.id.btn_start_email)
+        val tvLoginLink = findViewById<TextView>(com.android.guru2.R.id.tv_login_link)
+        val container = findViewById<FrameLayout>(com.android.guru2.R.id.fragment_container)
 
         // 인증 상태 관찰 (AuthViewModel의 null/true/false 상태 대응)
         lifecycleScope.launch {
@@ -118,17 +124,17 @@ class StartActivity : AppCompatActivity() {
 
     // 프래그먼트 교체를 위한 공통 함수
     fun replaceFragment(fragment: Fragment) {
-        val container = findViewById<FrameLayout>(R.id.fragment_container)
+        val container = findViewById<FrameLayout>(com.android.guru2.R.id.fragment_container)
         container.visibility = View.VISIBLE
         container.setBackgroundColor(Color.WHITE)
 
         // 프래그먼트가 뜰 때 액티비티 바닥에 깔린 버튼들을 숨김
-        findViewById<Button>(R.id.btn_start_email).visibility = View.GONE
-        findViewById<TextView>(R.id.tv_login_link).visibility = View.GONE
+        findViewById<Button>(com.android.guru2.R.id.btn_start_email).visibility = View.GONE
+        findViewById<TextView>(com.android.guru2.R.id.tv_login_link).visibility = View.GONE
 
         supportFragmentManager.beginTransaction()
-            .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
-            .replace(R.id.fragment_container, fragment)
+            .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
+            .replace(com.android.guru2.R.id.fragment_container, fragment)
             .addToBackStack(null)
             .commit()
     }

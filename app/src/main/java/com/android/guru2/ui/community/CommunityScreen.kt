@@ -38,7 +38,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.android.guru2.PetInfo
+import com.android.guru2.onboarding.PetInfo
 import com.android.guru2.R
 import com.android.guru2.data.SupabaseClientProvider
 import com.android.guru2.data.model.CommunityPost

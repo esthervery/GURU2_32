@@ -1,6 +1,5 @@
-package com.android.guru2
+package com.android.guru2.auth
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,7 +11,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import com.android.guru2.AuthViewModel
+import com.android.guru2.R
+import com.android.guru2.onboarding.StartActivity
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 

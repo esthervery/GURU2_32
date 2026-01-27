@@ -1,9 +1,8 @@
-package com.android.guru2
+package com.android.guru2.interaction
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import com.android.guru2.data.CharacterDbModel
 import com.android.guru2.data.SupabaseClientProvider

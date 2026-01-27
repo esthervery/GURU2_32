@@ -21,11 +21,11 @@
         android:theme="@style/Theme.Guru2"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".PetInfoActivity"
+            android:name=".onboarding.PetInfoActivity"
             android:exported="false" />
 
         <activity
-            android:name=".StartActivity"
+            android:name=".onboarding.StartActivity"
             android:exported="true"
             android:launchMode="singleTask">
             <!-- 1. 앱 런처 아이콘 (메인 진입점) -->
@@ -48,7 +48,7 @@
         </activity>
 
         <activity
-            android:name=".MainActivity"
+            android:name=".interaction.MainActivity"
             android:exported="false" />
     </application>
 

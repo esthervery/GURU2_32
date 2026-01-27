@@ -1,4 +1,4 @@
-package com.android.guru2
+package com.android.guru2.onboarding
 
 import android.Manifest
 import android.content.Intent
@@ -9,13 +9,14 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
+import com.android.guru2.network.CharacterApiService
+import com.android.guru2.onboarding.LoadingFragment
+import com.android.guru2.interaction.MainActivity
+import com.android.guru2.R
 import com.android.guru2.data.SupabaseClientProvider
 import com.android.guru2.network.RetrofitClient
 import com.bumptech.glide.Glide
@@ -25,8 +26,6 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.launch
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 
 class PetInfoActivity : AppCompatActivity() {
 

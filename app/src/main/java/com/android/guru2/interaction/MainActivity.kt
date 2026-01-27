@@ -1,4 +1,4 @@
-package com.android.guru2
+package com.android.guru2.interaction
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -19,9 +19,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import com.android.guru2.ui.calendar.CalendarScreen //
+import com.android.guru2.interaction.MainViewModel
+import com.android.guru2.R
+import com.android.guru2.ui.calendar.CalendarScreen
 import com.android.guru2.ui.calendar.CalendarViewModel
-import com.android.guru2.ui.community.CommunityScreen //
+import com.android.guru2.ui.community.CommunityScreen
 
 class MainActivity : AppCompatActivity() {
     // MainViewModel을 Activity 레벨에서 유지

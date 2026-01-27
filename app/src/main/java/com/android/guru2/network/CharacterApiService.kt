@@ -1,4 +1,4 @@
-package com.android.guru2
+package com.android.guru2.network
 
 import retrofit2.Response
 import retrofit2.http.Field

@@ -1,4 +1,4 @@
-package com.android.guru2
+package com.android.guru2.onboarding
 
 import kotlinx.serialization.Serializable
 
