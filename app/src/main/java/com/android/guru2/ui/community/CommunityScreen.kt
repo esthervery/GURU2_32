@@ -96,16 +96,29 @@ private fun saveLikeStates(
     }
 }
 
-// ✅ 저장된 좋아요 상태 로드
-private fun loadLikeStates(context: Context, userId: String): Triple<Set<String>, Set<String>, Map<String, Int>> {
+//  저장된 좋아요 상태 로드
+private fun loadLikeStates(
+    context: Context,
+    userId: String
+): Triple<Set<String>, Set<String>, Map<String, Int>> {
     val prefs = context.getSharedPreferences("community_likes_$userId", Context.MODE_PRIVATE)
+
     val dbLikedPosts = prefs.getStringSet("db_liked_posts", emptySet()) ?: emptySet()
     val sampleLikedPosts = prefs.getStringSet("sample_liked_posts", emptySet()) ?: emptySet()
+
     val likeCounts = mutableMapOf<String, Int>()
 
-    // 샘플 데이터의 기본 좋아요 개수 로드
+    // ✅ prefs에 저장된 count_로 시작하는 모든 키를 읽어서 복원
+    prefs.all.forEach { (key, value) ->
+        if (key.startsWith("count_") && value is Int) {
+            val postId = key.removePrefix("count_")
+            likeCounts[postId] = value
+        }
+    }
+
+    // ✅ 샘플 게시글은 기본값 보강 (prefs에 없으면 기본 likeCount)
     getSamplePosts().forEach { post ->
-        likeCounts[post.id] = prefs.getInt("count_${post.id}", post.likeCount)
+        likeCounts.putIfAbsent(post.id, post.likeCount)
     }
 
     return Triple(dbLikedPosts, sampleLikedPosts, likeCounts)
@@ -174,7 +187,7 @@ fun CommunityScreen(
                     userLikedPosts.addAll(serverLikedPosts)
 
                     // ✅ 서버 데이터를 로컬에 저장
-                    saveLikeStates(context, userId, userLikedPosts, sampleLikedPosts, localLikeCounts)
+                    saveLikeStates(context, userId, userLikedPosts, sampleLikedPosts, localLikeCounts.toMap())
                 } catch (e: Exception) {
                     Log.e("CommunityScreen", "서버 좋아요 목록 로드 실패", e)
                 }
@@ -333,7 +346,7 @@ fun CommunityScreen(
                                         }
                                         // 로컬에 저장
                                         currentUserId?.let { userId ->
-                                            saveLikeStates(context, userId, userLikedPosts, sampleLikedPosts, localLikeCounts)
+                                            saveLikeStates(context, userId, userLikedPosts, sampleLikedPosts, localLikeCounts.toMap())
                                         }
                                         refreshTrigger++
                                         return@PostItem
@@ -358,7 +371,7 @@ fun CommunityScreen(
                                         }
 
                                         // 로컬에 즉시 저장
-                                        saveLikeStates(context, userId, userLikedPosts, sampleLikedPosts, localLikeCounts)
+                                        saveLikeStates(context, userId, userLikedPosts, sampleLikedPosts, localLikeCounts.toMap())
                                         refreshTrigger++
 
                                         // 서버에 반영
@@ -372,7 +385,7 @@ fun CommunityScreen(
                                                 userLikedPosts.remove(id)
                                                 localLikeCounts[id] = maxOf(0, (localLikeCounts[id] ?: 0) - 1)  // ✅ 최소값 0
                                             }
-                                            saveLikeStates(context, userId, userLikedPosts, sampleLikedPosts, localLikeCounts)
+                                            saveLikeStates(context, userId, userLikedPosts, sampleLikedPosts, localLikeCounts.toMap())
                                             refreshTrigger++
                                             Toast.makeText(context, "좋아요 반영 실패", Toast.LENGTH_SHORT).show()
                                         } else {
