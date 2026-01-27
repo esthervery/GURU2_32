@@ -18,26 +18,35 @@ import com.android.guru2.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HealthRecordDialog(
-    onDismiss: () -> Unit,
-    onSave: (String, String, String, Double) -> Unit
-) {
-    var symptom by remember { mutableStateOf("") }
-    var treatment by remember { mutableStateOf("") }
-    var foodIntake by remember { mutableStateOf("") }
-    var weight by remember { mutableStateOf("") }
+onDismiss: () -> Unit,
+onSave: (String, String, String, Double) -> Unit,
+initialSymptom: String = "",
+initialTreatment: String = "",
+initialFoodIntake: String = "",
+initialWeight: Double = 0.0,
+headerTitle: String = "건강 기록"
+)
+ {
+    var symptom by remember { mutableStateOf(initialSymptom) }
+    var treatment by remember { mutableStateOf(initialTreatment) }
+    var foodIntake by remember { mutableStateOf(initialFoodIntake) }
+    var weight by remember {
+        mutableStateOf(
+            if (initialWeight == 0.0) "" else initialWeight.toString()
+        )
+    }
     var showSaveConfirmDialog by remember { mutableStateOf(false) }
 
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)  // 풀스크린!
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = Color.White
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+
                 // 헤더
                 Row(
                     modifier = Modifier
@@ -49,13 +58,13 @@ fun HealthRecordDialog(
                     IconButton(onClick = onDismiss) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_back),
-                            contentDescription = "닫기",
+                            contentDescription = "뒤로",
                             modifier = Modifier.size(28.dp)
                         )
                     }
 
                     Text(
-                        text = "건강 기록",
+                        text = headerTitle,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -63,7 +72,7 @@ fun HealthRecordDialog(
                     IconButton(onClick = onDismiss) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_close),
-                            contentDescription = "취소",
+                            contentDescription = "닫기",
                             modifier = Modifier.size(32.dp)
                         )
                     }
@@ -77,23 +86,12 @@ fun HealthRecordDialog(
                         .padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // 이상증상
-                    Text(
-                        text = "이상증상",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-
+                    Text(text = "이상증상", fontSize = 14.sp, color = Color.Gray)
                     TextField(
                         value = symptom,
                         onValueChange = { symptom = it },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = {
-                            Text(
-                                text = "예) 미열",
-                                color = Color.LightGray
-                            )
-                        },
+                        placeholder = { Text("예) 미열", color = Color.LightGray) },
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFFF5F5F5),
                             unfocusedContainerColor = Color(0xFFF5F5F5),
@@ -103,23 +101,12 @@ fun HealthRecordDialog(
                         shape = RoundedCornerShape(12.dp)
                     )
 
-                    // 대소변
-                    Text(
-                        text = "대소변",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-
+                    Text(text = "대소변", fontSize = 14.sp, color = Color.Gray)
                     TextField(
                         value = treatment,
                         onValueChange = { treatment = it },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = {
-                            Text(
-                                text = "예) 보통 변 1회, 투명한 노란색 소변 3회",
-                                color = Color.LightGray
-                            )
-                        },
+                        placeholder = { Text("예) 보통 변 1회, 투명한 노란색 소변 3회", color = Color.LightGray) },
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFFF5F5F5),
                             unfocusedContainerColor = Color(0xFFF5F5F5),
@@ -129,23 +116,12 @@ fun HealthRecordDialog(
                         shape = RoundedCornerShape(12.dp)
                     )
 
-                    // 식사량
-                    Text(
-                        text = "식사량",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-
+                    Text(text = "식사량", fontSize = 14.sp, color = Color.Gray)
                     TextField(
                         value = foodIntake,
                         onValueChange = { foodIntake = it },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = {
-                            Text(
-                                text = "예) 사료 300g, 캔 70g, 물 250ml",
-                                color = Color.LightGray
-                            )
-                        },
+                        placeholder = { Text("예) 사료 300g, 캔 70g, 물 250ml", color = Color.LightGray) },
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFFF5F5F5),
                             unfocusedContainerColor = Color(0xFFF5F5F5),
@@ -155,12 +131,7 @@ fun HealthRecordDialog(
                         shape = RoundedCornerShape(12.dp)
                     )
 
-                    // 몸무게
-                    Text(
-                        text = "몸무게",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
+                    Text(text = "몸무게", fontSize = 14.sp, color = Color.Gray)
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -175,12 +146,7 @@ fun HealthRecordDialog(
                                 }
                             },
                             modifier = Modifier.width(120.dp),
-                            placeholder = {
-                                Text(
-                                    text = "예) 4.2",
-                                    color = Color.LightGray
-                                )
-                            },
+                            placeholder = { Text("예) 4.2", color = Color.LightGray) },
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = Color(0xFFF5F5F5),
                                 unfocusedContainerColor = Color(0xFFF5F5F5),
@@ -190,37 +156,27 @@ fun HealthRecordDialog(
                             shape = RoundedCornerShape(12.dp)
                         )
 
-                        Text(
-                            text = "kg",
-                            fontSize = 16.sp
-                        )
+                        Text(text = "kg", fontSize = 16.sp)
                     }
                 }
 
-                // 저장 버튼
+                val weightValue = weight.toDoubleOrNull()
+                val canSave = symptom.isNotEmpty() &&
+                        treatment.isNotEmpty() &&
+                        foodIntake.isNotEmpty() &&
+                        weightValue != null
+
                 Button(
-                    onClick = {
-                        val weightValue = weight.toDoubleOrNull()
-                        if (symptom.isNotEmpty() && treatment.isNotEmpty() &&
-                            foodIntake.isNotEmpty() && weightValue != null) {
-                            showSaveConfirmDialog = true
-                        }
-                    },
+                    onClick = { if (canSave) showSaveConfirmDialog = true },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(20.dp)
                         .height(56.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (symptom.isNotEmpty() && treatment.isNotEmpty() &&
-                            foodIntake.isNotEmpty() && weight.toDoubleOrNull() != null) {
-                            Color(0xFFF0724A)
-                        } else {
-                            Color(0xFFCCCCCC)
-                        }
+                        containerColor = if (canSave) Color(0xFFF0724A) else Color(0xFFCCCCCC)
                     ),
                     shape = RoundedCornerShape(12.dp),
-                    enabled = symptom.isNotEmpty() && treatment.isNotEmpty() &&
-                            foodIntake.isNotEmpty() && weight.toDoubleOrNull() != null
+                    enabled = canSave
                 ) {
                     Text(
                         text = "저장하기",
@@ -233,7 +189,7 @@ fun HealthRecordDialog(
         }
     }
 
-    // 저장 확인 다이얼로그
+    // 저장 완료 확인 다이얼로그
     if (showSaveConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showSaveConfirmDialog = false },
@@ -260,8 +216,8 @@ fun HealthRecordDialog(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        val weightValue = weight.toDoubleOrNull() ?: 0.0
-                        onSave(symptom, treatment, foodIntake, weightValue)
+                        val w = weight.toDoubleOrNull() ?: 0.0
+                        onSave(symptom, treatment, foodIntake, w)
                         showSaveConfirmDialog = false
                     },
                     modifier = Modifier.fillMaxWidth()
