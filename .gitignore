@@ -1,15 +1,57 @@
+# --- IDE & 편집기 설정 ---
+.idea/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
+*.ipr
+*.iws
+.vscode/
+/captures/
+.externalNativeBuild/
+.cxx/
+*.swp
+*.bak
+
+# --- 빌드 결과물 및 임시 파일 ---
+build/
+app/build/
+.gradle/
 /build
-/captures
-.externalNativeBuild
-.cxx
+.kotlin/
+.kotlin/errors/
+*.log
+
+# --- 보안 및 로컬 환경 설정 ---
 local.properties
+secrets.xml
+keystore.properties
+*.jks
+*.keystore
+
+# --- Supabase 보안 ---
+BuildConfig.kt
+**/generated/
+
+# --- OS 및 기타 시스템 파일 ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Android 특화 ---
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+proguard/
+lint/
+output.json
+
+# --- 백업 및 임시 파일 ---
+*~
+*.orig
+*.rej
+*.tmp
+*.temp
+
+# --- Gradle Wrapper (선택) ---
+# gradle/wrapper/gradle-wrapper.jar
+# gradle/wrapper/gradle-wrapper.properties

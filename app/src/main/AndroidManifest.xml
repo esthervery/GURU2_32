@@ -2,7 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
     <application
+        android:name=".PetterdaysApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -10,16 +18,38 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Guru2">
+        android:theme="@style/Theme.Guru2"
+        android:usesCleartextTraffic="true">
         <activity
-            android:name=".MainActivity"
-            android:exported="true">
+            android:name=".onboarding.PetInfoActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".onboarding.StartActivity"
+            android:exported="true"
+            android:launchMode="singleTask">
+            <!-- 1. 앱 런처 아이콘 (메인 진입점) -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- 2. 이메일 인증 링크용 딥링크 -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+              
+                <!-- Supabase 이메일 인증 후 리다이렉트 -->
+                <data
+                    android:scheme="app"
+                    android:host="confirm-signup"/>
+                <!-- 실제 URL: app://confirm-signup -->
+            </intent-filter>
         </activity>
+
+        <activity
+            android:name=".interaction.MainActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

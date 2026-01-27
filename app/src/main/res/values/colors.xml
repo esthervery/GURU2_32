@@ -1,5 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <!-- Main Colors (디자인 시안) -->
+    <color name="main_orange">#F0724A</color>
+
+    <!-- Back Colors -->
+    <color name="white">#FFFCFB</color>
+    <color name="black">#1C0E09</color>
+
+    <!-- Sub Colors -->
+    <color name="sub_yellow">#FFFE4C</color>
+    <color name="sub_purple">#C7B2F7</color>
+    <color name="sub_pink">#FEBBF0</color>
+
+    <!-- Orange Palette (디자인 시안 기반) -->
+    <color name="orange_50">#FEF1ED</color>
+    <color name="orange_100">#FAD3C7</color>
+    <color name="orange_200">#F8BEAC</color>
+    <color name="orange_300">#F5A186</color>
+    <color name="orange_400">#F38E6E</color>
+    <color name="orange_500">#F0724A</color>
+    <color name="orange_600">#DA6843</color>
+    <color name="orange_700">#AA5135</color>
+    <color name="orange_800">#843F29</color>
+    <color name="orange_900">#65301F</color>
+
+    <!-- Background Colors -->
+    <color name="background_light">#FFF9F5</color>
+    <color name="input_background">#F5F5F5</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#1C0E09</color>
+    <color name="text_secondary">#999999</color>
+    <color name="text_light_gray">#CCCCCC</color>
+
+    <color name="warm">#FFE6D6</color>
+
+    <!-- Standard Android Colors (호환성) -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
 </resources>
