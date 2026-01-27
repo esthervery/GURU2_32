@@ -38,7 +38,7 @@ class CommunityRepository {
         }
     }
 
-    // 검색(간단)
+    // 검색
     suspend fun searchPosts(query: String, category: String, userId: String): List<CommunityPost> {
         return try {
             client.from("community_posts")

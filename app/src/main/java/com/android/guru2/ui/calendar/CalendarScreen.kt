@@ -280,7 +280,6 @@ fun CalendarScreen(
         ScheduleDialog(
             onDismiss = { editingSchedule = null },
             onSave = { title, location, notes ->
-                // ImportantSchedule이 location/notes nullable이면 여기서 trim 후 빈 문자열을 null로 바꿔서 넣어도 됨
                 viewModel.updateSchedule(
                     schedule = schedule.copy(
                         title = title,
@@ -298,9 +297,7 @@ fun CalendarScreen(
         )
     }
 
-    // =========================
     // 상세 팝업들 (삭제/수정/닫기)
-    // =========================
     showDiaryDetail?.let { diary ->
         var showDeleteConfirm by remember { mutableStateOf(false) }
 
@@ -495,10 +492,7 @@ fun CalendarScreen(
     }
 }
 
-// =========================
 // 캘린더 UI 컴포저블들
-// =========================
-
 @Composable
 fun CalendarView(
     currentMonth: YearMonth,

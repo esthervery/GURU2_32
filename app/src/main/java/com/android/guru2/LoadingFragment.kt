@@ -14,8 +14,6 @@ class LoadingFragment : Fragment(R.layout.fragment_loading) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 휴대폰 자체 '뒤로가기' 버튼 무효화
-        // 사용자가 물리 버튼이나 제스처로 뒤로 가려 해도 아무 반응 없도록 만듦
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 // 뒤로가기 무시
@@ -30,19 +28,7 @@ class LoadingFragment : Fragment(R.layout.fragment_loading) {
         val uri = Uri.parse(videoPath)
 
         videoView?.setVideoURI(uri)
-        // 3. 비디오 준비 완료 시 재생 (무한 반복, 소리 없음)
-//        videoView?.setOnPreparedListener { mediaPlayer ->
-//            mediaPlayer.isLooping = true
-//            mediaPlayer.setVolume(0f, 0f) // 무음 설정
-//
-//            // 영상 비율에 맞춰 꽉 채우기 (Scale 조절)
-//            val videoRatio = mediaPlayer.videoWidth / mediaPlayer.videoHeight.toFloat()
-//            val screenRatio = videoView!!.width / videoView!!.height.toFloat()
-//            val scale = videoRatio / screenRatio
-//            if (scale >= 1f) videoView!!.scaleX = scale else videoView!!.scaleY = 1f / scale
-//
-//            videoView?.start()
-//        }
+
         videoView?.setOnPreparedListener { mediaPlayer ->
             mediaPlayer.isLooping = true
             mediaPlayer.setVolume(0f, 0f)

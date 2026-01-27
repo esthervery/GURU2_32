@@ -129,7 +129,8 @@ private fun loadLikeStates(
 fun CommunityScreen(
     onBackToCalendar: () -> Unit
 ) {
-    var selectedTab by remember { mutableStateOf(1) } // 0=나란히, 1=마음으로
+    // 0=나란히, 1=마음으로
+    var selectedTab by remember { mutableStateOf(1) }
     var showWriteDialog by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(true) }
     var showPostDetail by remember { mutableStateOf<CommunityPost?>(null) }
@@ -383,7 +384,7 @@ fun CommunityScreen(
                                                 localLikeCounts[id] = (localLikeCounts[id] ?: 0) + 1
                                             } else {
                                                 userLikedPosts.remove(id)
-                                                localLikeCounts[id] = maxOf(0, (localLikeCounts[id] ?: 0) - 1)  //  최소값 0
+                                                localLikeCounts[id] = maxOf(0, (localLikeCounts[id] ?: 0) - 1)
                                             }
                                             saveLikeStates(context, userId, userLikedPosts, sampleLikedPosts, localLikeCounts.toMap())
                                             refreshTrigger++

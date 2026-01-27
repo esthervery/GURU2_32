@@ -52,7 +52,7 @@ class StartActivity : AppCompatActivity() {
             }
         }
 
-        // 화면 전환 이벤트 관찰 (애니메이션 제거로 검은 잔상 차단)
+        // 화면 전환 이벤트 관찰
         lifecycleScope.launch {
             authViewModel.loginEvent.collect { event ->
                 when (event) {
@@ -106,7 +106,6 @@ class StartActivity : AppCompatActivity() {
         val data: Uri? = intent.data
         if (data != null && data.scheme == "app" && data.host == "confirm-signup") {
             // Supabase SDK가 딥링크를 감시하여 자동으로 세션을 업데이트
-            // 필요 시 여기서 추가적인 확인 로직을 넣을 수 있음
             lifecycleScope.launch {
                 try {
                     // SDK 버전 및 설정에 따라 자동 처리됨

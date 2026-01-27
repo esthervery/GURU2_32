@@ -39,7 +39,8 @@ class MainActivity : AppCompatActivity() {
         // 통합 바텀 네비게이션 (ComposeView 연결)
         val composeNavView = findViewById<ComposeView>(R.id.compose_bottom_nav)
         composeNavView.setContent {
-            var selectedItem by remember { mutableIntStateOf(1) } // 홈(1)이 기본
+            // 홈(1)이 기본
+            var selectedItem by remember { mutableIntStateOf(1) }
 
             AppBottomNavigation(
                 selectedItem = selectedItem,
@@ -70,7 +71,6 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-// ---------------- Fragment Wrappers & Navigation Bar ----------------
 // 통합 바텀네비게이션 컴포저블
 @Composable
 fun AppBottomNavigation(selectedItem: Int, onItemSelected: (Int) -> Unit) {

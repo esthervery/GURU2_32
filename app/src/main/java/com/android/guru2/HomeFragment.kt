@@ -21,7 +21,7 @@ import com.bumptech.glide.request.target.Target
 class HomeFragment : Fragment() {
     private val viewModel: MainViewModel by activityViewModels()
 
-    // ✅ 연타 방지 및 상태 관리 변수
+    // 연타 방지 및 상태 관리 변수
     private var isAnimating = false
     private var hideRunnable: Runnable? = null
 
@@ -54,7 +54,7 @@ class HomeFragment : Fragment() {
 
         btnRainbow.setOnClickListener { showRainbowDialog() }
 
-        // ✅ 각 버튼 클릭 시: 전용 애니메이션과 전용 말풍선 이미지 지정
+        // 각 버튼 클릭 시 전용 애니메이션과 전용 말풍선 이미지 지정
         btnPlay.setOnClickListener {
             startInteraction(ivAnimation, ivBubble, R.drawable.ball_animate, R.drawable.bubble_play_img, 2500L)
         }
@@ -68,11 +68,14 @@ class HomeFragment : Fragment() {
         }
     }
 
-    // ✅ 연타 방지 로직이 포함된 인터랙션 실행 함수
+    // 연타 방지 로직이 포함된 인터랙션 실행 함수
     private fun startInteraction(animView: ImageView, bubbleView: ImageView, animRes: Int, bubbleRes: Int, duration: Long) {
-        if (isAnimating) return // 이미 진행 중이면 클릭 무시
+        // 이미 진행 중이면 클릭 무시
+        if (isAnimating) return
+        // 진행 중 설정
         isAnimating = true
-        setButtonsEnabled(false) // 버튼 잠금
+        // 버튼 잠금
+        setButtonsEnabled(false)
 
         // 이전 예약된 작업 취소 및 Glide 초기화
         hideRunnable?.let { animView.removeCallbacks(it) }
@@ -88,11 +91,11 @@ class HomeFragment : Fragment() {
                 override fun onResourceReady(resource: Drawable, model: Any, target: Target<Drawable>?, dataSource: DataSource, isFirstResource: Boolean): Boolean {
                     if (resource is Animatable) {
                         resource.stop()
-                        resource.start() // 첫 프레임부터 재생
+                        resource.start()
 
                         hideRunnable = Runnable {
                             animView.visibility = View.GONE
-                            // ✅ 애니메이션 종료 후 말풍선 페이드 효과 시작
+                            // 애니메이션 종료 후 말풍선 페이드 효과 시작
                             showSpeechBubbleEffect(bubbleView, bubbleRes)
                         }
                         animView.postDelayed(hideRunnable!!, duration)
@@ -108,18 +111,18 @@ class HomeFragment : Fragment() {
             .into(animView)
     }
 
-    // ✅ 말풍선 페이드 인(0.3초) -> 유지(1초) -> 페이드 아웃(0.3초)
+    // 말풍선 페이드 인(0.3초) -> 유지(1초) -> 페이드 아웃(0.3초) 설정
     private fun showSpeechBubbleEffect(bubbleView: ImageView, imageRes: Int) {
         bubbleView.setImageResource(imageRes)
         bubbleView.visibility = View.VISIBLE
 
-        // 1. 페이드 인
+        // 페이드 인
         bubbleView.animate().alpha(1f).setDuration(300).withEndAction {
-            // 2. 1초 대기 후 페이드 아웃
+            // 1초 대기 후 페이드 아웃
             bubbleView.postDelayed({
                 bubbleView.animate().alpha(0f).setDuration(300).withEndAction {
                     bubbleView.visibility = View.GONE
-                    // ✅ 모든 과정 완료 후 연타 방지 해제
+                    // 모든 과정 완료 후 연타 방지 해제
                     isAnimating = false
                     setButtonsEnabled(true)
                 }.start()

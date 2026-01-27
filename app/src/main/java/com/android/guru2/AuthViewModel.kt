@@ -26,7 +26,7 @@ class AuthViewModel : ViewModel() {
     private val _signUpSuccess = MutableStateFlow<Boolean?>(null)
     val signUpSuccess = _signUpSuccess.asStateFlow()
 
-    // 이메일 인증 상태를 Boolean?로 변경 (null: 확인 중, true: 로그인됨, false: 로그인 안 됨)
+    // 이메일 인증 상태를 변경 (null: 확인 중, true: 로그인됨, false: 로그인 안 됨)
     private val _isAuthenticated = MutableStateFlow<Boolean?>(null)
     val isAuthenticated = _isAuthenticated.asStateFlow()
 
@@ -54,13 +54,12 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    //캐릭터 정보 확인 로직을 별도 함수로 분리하여 자동/수동 로그인 모두에서 사용합니다.
+    // 캐릭터 정보 확인 로직을 별도 함수로 분리하여 자동/수동 로그인 모두에서 사용
     private fun checkUserCharacterAndNavigate() {
         viewModelScope.launch {
             try {
                 // 현재 사용자 정보 가져오기
                 val user = SupabaseClientProvider.client.auth.retrieveUserForCurrentSession()
-                // val user = SupabaseClientProvider.client.auth.currentUserOrNull()
 
                 // 만약 유저 정보 자체가 없다면 로그인 안 된 상태로 처리 -> 세션 좀비 현상 해결
                 if (user == null) {
@@ -69,7 +68,6 @@ class AuthViewModel : ViewModel() {
                 }
 
                 // characterInfo 테이블 조회 (서버와 통신하며 세션 유효성 체크)
-                // 서버에서 계정이 삭제되었다면 이 시점에서 에러(401 Unauthorized 등)가 발생
                 val response = SupabaseClientProvider.client.postgrest["characterInfo"]
                     .select {
                         filter { eq("id", user.id) }
@@ -96,10 +94,13 @@ class AuthViewModel : ViewModel() {
     }
 
     fun signUp(emailInput: String, passwordInput: String) {
-        if (_isLoading.value) return // 이미 로딩 중이면 즉시 종료
+        // 이미 로딩 중이면 즉시 종료
+        if (_isLoading.value) return
 
         viewModelScope.launch {
-            _isLoading.value = true // 로딩 시작
+            // 로딩 시작 설정 먼저
+            _isLoading.value = true
+
             try {
                 SupabaseClientProvider.client.auth.signUpWith(
                     Email,
@@ -118,7 +119,7 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    // 로그인 함수 수정: 로그인 성공 후 공통 체크 함수를 호출
+    // 로그인 성공 후 공통 체크 함수를 호출
     fun signIn(emailInput: String, passwordInput: String) {
         viewModelScope.launch {
             try {

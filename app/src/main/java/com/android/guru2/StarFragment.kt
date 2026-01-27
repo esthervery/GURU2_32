@@ -91,7 +91,7 @@ class StarFragment : Fragment() {
         alertDialog.show()
     }
 
-    // 애니메이션 실행 함수 (기존과 동일)
+    // 애니메이션 실행 함수
     private fun startStarInteraction(animView: ImageView, bubbleView: ImageView, animRes: Int, bubbleRes: Int) {
         if (isAnimating) return
         isAnimating = true
