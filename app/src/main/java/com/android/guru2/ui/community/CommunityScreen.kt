@@ -74,7 +74,7 @@ private suspend fun uploadImageToSupabase(context: Context, uri: Uri, postId: St
     }
 }
 
-// ✅ 모든 좋아요 상태를 SharedPreferences에 저장 (DB + 샘플 통합)
+// 모든 좋아요 상태를 SharedPreferences에 저장 (DB + 샘플 통합)
 private fun saveLikeStates(
     context: Context,
     userId: String,
@@ -108,7 +108,7 @@ private fun loadLikeStates(
 
     val likeCounts = mutableMapOf<String, Int>()
 
-    // ✅ prefs에 저장된 count_로 시작하는 모든 키를 읽어서 복원
+    //  prefs에 저장된 count_로 시작하는 모든 키를 읽어서 복원
     prefs.all.forEach { (key, value) ->
         if (key.startsWith("count_") && value is Int) {
             val postId = key.removePrefix("count_")
@@ -116,7 +116,7 @@ private fun loadLikeStates(
         }
     }
 
-    // ✅ 샘플 게시글은 기본값 보강 (prefs에 없으면 기본 likeCount)
+    //  샘플 게시글은 기본값 보강 (prefs에 없으면 기본 likeCount)
     getSamplePosts().forEach { post ->
         likeCounts.putIfAbsent(post.id, post.likeCount)
     }
@@ -155,7 +155,7 @@ fun CommunityScreen(
     // UI 갱신을 위한 트리거
     var refreshTrigger by remember { mutableStateOf(0) }
 
-    // ✅ 사용자 정보 및 저장된 좋아요 상태 로드
+    //  사용자 정보 및 저장된 좋아요 상태 로드
     LaunchedEffect(Unit) {
         try {
             val userId = SupabaseClientProvider.client.auth.currentUserOrNull()?.id
@@ -168,7 +168,7 @@ fun CommunityScreen(
                     .decodeSingleOrNull<PetInfo>()
                 userPetInfo = petData
 
-                // ✅ 로컬에 저장된 좋아요 상태 먼저 로드 (즉시 UI 반영)
+                //  로컬에 저장된 좋아요 상태 먼저 로드 (즉시 UI 반영)
                 val (savedDbLikes, savedSampleLikes, savedCounts) = loadLikeStates(context, userId)
                 userLikedPosts.addAll(savedDbLikes)
                 sampleLikedPosts.addAll(savedSampleLikes)
@@ -186,7 +186,7 @@ fun CommunityScreen(
                     userLikedPosts.clear()
                     userLikedPosts.addAll(serverLikedPosts)
 
-                    // ✅ 서버 데이터를 로컬에 저장
+                    //  서버 데이터를 로컬에 저장
                     saveLikeStates(context, userId, userLikedPosts, sampleLikedPosts, localLikeCounts.toMap())
                 } catch (e: Exception) {
                     Log.e("CommunityScreen", "서버 좋아요 목록 로드 실패", e)
@@ -339,7 +339,7 @@ fun CommunityScreen(
                                     if (id.startsWith("sample_")) {
                                         if (sampleLikedPosts.contains(id)) {
                                             sampleLikedPosts.remove(id)
-                                            localLikeCounts[id] = maxOf(0, (localLikeCounts[id] ?: 0) - 1)  // ✅ 최소값 0
+                                            localLikeCounts[id] = maxOf(0, (localLikeCounts[id] ?: 0) - 1)  //  최소값 0
                                         } else {
                                             sampleLikedPosts.add(id)
                                             localLikeCounts[id] = (localLikeCounts[id] ?: 0) + 1
@@ -364,7 +364,7 @@ fun CommunityScreen(
                                         val wasLiked = userLikedPosts.contains(id)
                                         if (wasLiked) {
                                             userLikedPosts.remove(id)
-                                            localLikeCounts[id] = maxOf(0, (localLikeCounts[id] ?: 0) - 1)  // ✅ 최소값 0
+                                            localLikeCounts[id] = maxOf(0, (localLikeCounts[id] ?: 0) - 1)  //  최소값 0
                                         } else {
                                             userLikedPosts.add(id)
                                             localLikeCounts[id] = (localLikeCounts[id] ?: 0) + 1
@@ -383,7 +383,7 @@ fun CommunityScreen(
                                                 localLikeCounts[id] = (localLikeCounts[id] ?: 0) + 1
                                             } else {
                                                 userLikedPosts.remove(id)
-                                                localLikeCounts[id] = maxOf(0, (localLikeCounts[id] ?: 0) - 1)  // ✅ 최소값 0
+                                                localLikeCounts[id] = maxOf(0, (localLikeCounts[id] ?: 0) - 1)  //  최소값 0
                                             }
                                             saveLikeStates(context, userId, userLikedPosts, sampleLikedPosts, localLikeCounts.toMap())
                                             refreshTrigger++
