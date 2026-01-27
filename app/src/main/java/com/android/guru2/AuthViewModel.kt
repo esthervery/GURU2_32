@@ -58,24 +58,39 @@ class AuthViewModel : ViewModel() {
     private fun checkUserCharacterAndNavigate() {
         viewModelScope.launch {
             try {
-                val userId = SupabaseClientProvider.client.auth.currentUserOrNull()?.id ?: return@launch
+                // 현재 사용자 정보 가져오기
+                val user = SupabaseClientProvider.client.auth.retrieveUserForCurrentSession()
+                // val user = SupabaseClientProvider.client.auth.currentUserOrNull()
 
-                // characterInfo 테이블에서 해당 유저의 정보가 있는지 확인
+                // 만약 유저 정보 자체가 없다면 로그인 안 된 상태로 처리 -> 세션 좀비 현상 해결
+                if (user == null) {
+                    _isAuthenticated.value = false
+                    return@launch
+                }
+
+                // characterInfo 테이블 조회 (서버와 통신하며 세션 유효성 체크)
+                // 서버에서 계정이 삭제되었다면 이 시점에서 에러(401 Unauthorized 등)가 발생
                 val response = SupabaseClientProvider.client.postgrest["characterInfo"]
                     .select {
-                        filter { eq("id", userId) }
+                        filter { eq("id", user.id) }
                     }
-
                 val hasCharacterInfo = response.data != "[]"
 
                 if (hasCharacterInfo) {
                     _loginEvent.emit(LoginNavEvent.ToMain)
                 } else {
+                    // 계정은 있는데 캐릭터만 없는 경우 (정상적인 신규 유저)
                     _loginEvent.emit(LoginNavEvent.ToPetInfo)
                 }
-            } catch (e: Exception) {
-                _loginEvent.emit(LoginNavEvent.Error("사용자 정보 확인 중 오류가 발생했습니다."))
+            } catch (e: Exception){
                 e.printStackTrace()
+                try {
+                    SupabaseClientProvider.client.auth.signOut()
+                } catch (signOutError: Exception) {
+                    // 이미 무효한 세션일 경우 signOut에서 에러 날 수 있으니 넘김
+                }
+                _isAuthenticated.value = false
+                _loginEvent.emit(LoginNavEvent.Error("세션이 만료되었거나 유효하지 않은 계정입니다."))
             }
         }
     }
