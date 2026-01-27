@@ -19,11 +19,16 @@ import com.android.guru2.R
 @Composable
 fun DiaryDialog(
     onDismiss: () -> Unit,
-    onSave: (String, String) -> Unit
+    onSave: (String, String) -> Unit,
+    initialTitle: String = "",
+    initialContent: String = "",
+    headerTitle: String = "하루 일기"
 ) {
-    var title by remember { mutableStateOf("") }
-    var content by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf(initialTitle) }
+    var content by remember { mutableStateOf(initialContent) }
     var showConfirmDialog by remember { mutableStateOf(false) }
+
+    val hasAnyInput = title.isNotEmpty() || content.isNotEmpty()
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -33,9 +38,8 @@ fun DiaryDialog(
             modifier = Modifier.fillMaxSize(),
             color = Color.White
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+
                 // 헤더
                 Row(
                     modifier = Modifier
@@ -47,29 +51,26 @@ fun DiaryDialog(
                     IconButton(onClick = onDismiss) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_back),
-                            contentDescription = "닫기",
+                            contentDescription = "뒤로",
                             modifier = Modifier.size(28.dp)
                         )
                     }
 
                     Text(
-                        text = "하루 일기",
+                        text = headerTitle,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
 
                     IconButton(
                         onClick = {
-                            if (title.isNotEmpty() || content.isNotEmpty()) {
-                                showConfirmDialog = true
-                            } else {
-                                onDismiss()
-                            }
+                            if (hasAnyInput) showConfirmDialog = true
+                            else onDismiss()
                         }
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_close),
-                            contentDescription = "취소",
+                            contentDescription = "닫기",
                             modifier = Modifier.size(32.dp)
                         )
                     }
@@ -83,12 +84,7 @@ fun DiaryDialog(
                         .padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // 제목
-                    Text(
-                        text = "제목",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
+                    Text(text = "제목", fontSize = 14.sp, color = Color.Gray)
 
                     TextField(
                         value = title,
@@ -109,12 +105,7 @@ fun DiaryDialog(
                         shape = RoundedCornerShape(12.dp)
                     )
 
-                    // 기록 남기기
-                    Text(
-                        text = "기록 남기기",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
+                    Text(text = "기록 남기기", fontSize = 14.sp, color = Color.Gray)
 
                     TextField(
                         value = content,
@@ -138,26 +129,19 @@ fun DiaryDialog(
                     )
                 }
 
-                // 저장 버튼
+                val canSave = title.isNotEmpty() && content.isNotEmpty()
+
                 Button(
-                    onClick = {
-                        if (title.isNotEmpty() && content.isNotEmpty()) {
-                            onSave(title, content)
-                        }
-                    },
+                    onClick = { if (canSave) onSave(title, content) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(20.dp)
                         .height(56.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (title.isNotEmpty() && content.isNotEmpty()) {
-                            Color(0xFFF0724A)
-                        } else {
-                            Color(0xFFCCCCCC)
-                        }
+                        containerColor = if (canSave) Color(0xFFF0724A) else Color(0xFFCCCCCC)
                     ),
                     shape = RoundedCornerShape(12.dp),
-                    enabled = title.isNotEmpty() && content.isNotEmpty()
+                    enabled = canSave
                 ) {
                     Text(
                         text = "저장하기",
@@ -170,7 +154,7 @@ fun DiaryDialog(
         }
     }
 
-    // 저장 확인 다이얼로그
+    // 작성 취소 확인 다이얼로그
     if (showConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showConfirmDialog = false },
@@ -187,20 +171,12 @@ fun DiaryDialog(
                         onDismiss()
                     }
                 ) {
-                    Text(
-                        text = "확인",
-                        color = Color(0xFFF0724A)
-                    )
+                    Text(text = "확인", color = Color(0xFFF0724A))
                 }
             },
             dismissButton = {
-                TextButton(
-                    onClick = { showConfirmDialog = false }
-                ) {
-                    Text(
-                        text = "취소",
-                        color = Color.Gray
-                    )
+                TextButton(onClick = { showConfirmDialog = false }) {
+                    Text(text = "취소", color = Color.Gray)
                 }
             },
             containerColor = Color.White,

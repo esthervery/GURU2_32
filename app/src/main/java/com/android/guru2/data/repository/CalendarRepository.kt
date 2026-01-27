@@ -132,4 +132,115 @@ class CalendarRepository {
             emptyList()
         }
     }
+
+    // 일기 삭제
+    suspend fun deleteDiary(id: Int?): Boolean {
+        if (id == null) return false
+        return try {
+            client.from("diary_entries").delete {
+                filter {
+                    eq("id", id)
+                }
+            }
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    // 건강 기록 삭제
+    suspend fun deleteHealthRecord(id: Int?): Boolean {
+        if (id == null) return false
+        return try {
+            client.from("health_records").delete {
+                filter {
+                    eq("id", id)
+                }
+            }
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    // 일정 삭제
+    suspend fun deleteSchedule(id: Int?): Boolean {
+        if (id == null) return false
+        return try {
+            client.from("important_schedules").delete {
+                filter {
+                    eq("id", id)
+                }
+            }
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    // 일기 수정
+    suspend fun updateDiary(diary: DiaryEntry): Boolean {
+        if (diary.id == null) return false
+        return try {
+            client.from("diary_entries").update({
+                set("title", diary.title)
+                set("content", diary.content)
+                set("date", diary.date)
+            }) {
+                filter {
+                    eq("id", diary.id!!)
+                }
+            }
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    // 건강 기록 수정
+    suspend fun updateHealthRecord(record: HealthRecord): Boolean {
+        if (record.id == null) return false
+        return try {
+            client.from("health_records").update({
+                set("symptom", record.symptom)
+                set("treatment", record.treatment)
+                set("food_intake", record.foodIntake)
+                set("weight", record.weight)
+                set("date", record.date)
+            }) {
+                filter {
+                    eq("id", record.id!!)
+                }
+            }
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    // 일정 수정
+    suspend fun updateSchedule(schedule: ImportantSchedule): Boolean {
+        if (schedule.id == null) return false
+        return try {
+            client.from("important_schedules").update({
+                set("title", schedule.title)
+                set("location", schedule.location)
+                set("notes", schedule.notes)
+                set("date", schedule.date)
+            }) {
+                filter {
+                    eq("id", schedule.id!!)
+                }
+            }
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
 }
