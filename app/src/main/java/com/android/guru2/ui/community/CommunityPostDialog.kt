@@ -176,7 +176,7 @@ fun CommunityPostDialog(
                         value = hashtag,
                         onValueChange = { hashtag = it },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("#참만보강아지", color = Color.LightGray) },
+                        placeholder = { Text("#잠만보강아지", color = Color.LightGray) },
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,

@@ -878,7 +878,7 @@ fun WritePostDialog(
                     OutlinedTextField(
                         value = hashtag,
                         onValueChange = { hashtag = it },
-                        placeholder = { Text("#참만보강아지") },
+                        placeholder = { Text("#잠만보강아지") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         textStyle = MaterialTheme.typography.bodyMedium
